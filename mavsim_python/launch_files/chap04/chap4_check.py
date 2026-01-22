@@ -15,7 +15,7 @@ import sys
 # insert parent directory at beginning of python search path
 from pathlib import Path
 # sys.path.insert(0,os.fspath(Path(__file__).parents[1]))
-# sys.path.insert(0,os.fspath(Path(__file__).parents[2]))
+sys.path.insert(0,os.fspath(Path(__file__).parents[2]))
 
 # 3rd party
 import numpy as np
