@@ -7,9 +7,7 @@ mavsim: camera viewer (for chapter 13)
         7/13/2023 - RWB
 """
 import numpy as np
-from tools.mpl_setup import ensure_mpl_config_dir
 
-ensure_mpl_config_dir()
 import matplotlib.pyplot as plt
 import parameters.camera_parameters as CAM
 #from tools.rotations import Euler2Rotation
