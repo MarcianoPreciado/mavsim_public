@@ -10,6 +10,36 @@
 [uavbook.pdf](https://drive.google.com/file/d/10iq7L_kAAdkjCFoq4EBRaT1u212BbyJ7/view?usp=sharing)
   This file is a work in progress.  The intent is that this file will eventually become a second edition to the book.  But beware, it has not been carefully proof read, and we continue to update it regularly.
 
+## Python Setup
+
+Requires **Python 3.10**. All simulations run inside a virtual environment.
+
+**1. Create the virtual environment** (one time, from the repo root):
+```bash
+python3.10 -m venv venv
+```
+
+**2. Activate it** (every new terminal session):
+```bash
+# macOS / Linux
+source venv/bin/activate
+
+# Windows
+venv\Scripts\activate
+```
+
+**3. Install dependencies:**
+```bash
+pip install -r requirements.txt
+```
+
+**4. Run a simulation** (example — chapter 2):
+```bash
+python mavsim_python/launch_files/chap02/mavsim_chap2.py
+```
+
+The `requirements.txt` pins PyQt6 + pyqtgraph at known-working versions. Using a different Qt backend (PyQt5, PySide2/6) or a mismatched pyqtgraph version is the most common source of viewer errors.
+
 ## Lecture Material
 
 The following lecture materials are included as a resource for instructors.  The slides closely follow the book.
