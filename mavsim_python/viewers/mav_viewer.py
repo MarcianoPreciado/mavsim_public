@@ -10,8 +10,8 @@ mavsim_python: mav viewer (for chapter 2)
 """
 import pyqtgraph.opengl as gl
 import pyqtgraph.Vector as Vector
-# from viewers.draw_mav import DrawMav
-from viewers.draw_mav_stl import DrawMav
+from viewers.draw_mav import DrawMav
+# from viewers.draw_mav_stl import DrawMav
 from time import time
 
 class MavViewer():
@@ -20,7 +20,7 @@ class MavViewer():
         # initialize Qt gui application and window
         self.app = app  # initialize QT, external so that only one QT process is running
         self.window = gl.GLViewWidget()  # initialize the view object
-        #gl.GLViewWidget.getViewport().setAttribute(QtCore.Qt.WidgetAttribute.WA_AcceptTouchEvents, False)
+        # gl.GLViewWidget.getViewport().setAttribute(QtCore.Qt.WidgetAttribute.WA_AcceptTouchEvents, False)
         self.window.setWindowTitle('MAV Viewer')
         grid = gl.GLGridItem() # make a grid to represent the ground
         grid.scale(20, 20, 20) # set the size of the grid (distance between each line)
@@ -46,16 +46,12 @@ class MavViewer():
     def update(self, state):
         # initialize the drawing the first time update() is called
         if not self.plot_initialized:
-            self.mav_plot = DrawMav(state, self.window)
+            self.sc_plot = DrawMav(state, self.window)
             self.plot_initialized = True
         # else update drawing on all other calls to update()
         else:
-            t = time()
-            if t-self.t_next > 0.0:
-                self.mav_plot.update(state)
-                self.t = t
-                self.t_next = t + self.ts_refresh
-        # update the center of the camera view to the mav location
+            self.sc_plot.update(state)
+        # update the center of the camera view to the spacecraft location
         view_location = Vector(state.east, state.north, state.altitude)  # defined in ENU coordinates
         self.window.opts['center'] = view_location
         # redraw
