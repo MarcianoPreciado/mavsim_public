@@ -1,3 +1,10 @@
+# Marciano's Progress
+## Chapter 2 Simulator Progress
+
+This is Marciano's progress on making the flight simulator for chapter 2.
+
+![Chapter 2 simulator progress](./simulator_gifs/chapter-2-simulation.gif)  
+
 # Small Unmanned Aircraft: Theory and Practice
 
 <img src="./bookcover.jpg" width="100" />
