@@ -4,10 +4,12 @@ mavsim_python: drawing tools
     - Update history:
         4/15/2019 - BGM
         3/30/2022 - RWB
+    - Fix import paths:
+        4/30/2026 - Marciano Preciado
 """
 import numpy as np
 import pyqtgraph.opengl as gl
-from planning.dubins_parameters import DubinsParameters
+from planners.dubins_parameters import DubinsParameters
 
 
 class DrawWaypoints:

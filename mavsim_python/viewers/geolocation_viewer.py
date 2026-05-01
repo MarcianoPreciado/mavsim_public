@@ -5,8 +5,10 @@ target geolocation algorithm
         4/1/2022 - RWB
         4/6/2022 - RWB
         7/13/2023 - RWB
+    - fix import paths:
+        4/30/2026 - Marciano Preciado
 """
-from tools.plotter import Plotter
+from plotter.plotter import Plotter
 
 class GeolocationViewer:
     def __init__(self, app,  dt = 0.01,

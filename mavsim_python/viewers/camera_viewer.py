@@ -8,7 +8,7 @@ mavsim: camera viewer (for chapter 13)
 import numpy as np
 import matplotlib.pyplot as plt
 import parameters.camera_parameters as CAM
-from tools.rotations import Euler2Rotation
+from tools.rotations import euler_to_rotation
 from message_types.msg_camera import MsgCamera
 
 class CameraViewer:
