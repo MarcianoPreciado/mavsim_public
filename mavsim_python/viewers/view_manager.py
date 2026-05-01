@@ -149,6 +149,7 @@ class ViewManager:
             waypoints_not_smooth, 
             waypoints,
             radius)
+        self.app.processEvents()
 
     def close(self, dataplot_name: str=[], sensorplot_name: str=[]):
         # Save an Image of the Plot
