@@ -14,7 +14,7 @@ import numpy as np
 # load message types
 from message_types.msg_state import MsgState
 import parameters.aerosonde_parameters as MAV
-from tools.rotations import quaternion_to_rotation, quaternion_to_euler
+from tools.rotations import quaternion_to_rotation, quaternion_to_euler, euler_to_quaternion
 
 class MavDynamics:
     def __init__(self, Ts):
@@ -87,31 +87,73 @@ class MavDynamics:
         for the dynamics xdot = f(x, u), returns f(x, u)
         """
         ##### TODO #####
-        
-        # Extract the States
-        # north = state.item(0)
+        # x = np.array([[north], [east], [down], [u], [v], [w], [e0], [e1], [e2], [p], [q], [r]]).T
+        inertial_pos = np.array([[state.item(0), state.item(1), state.item(2)]]).T
+        uvw = np.array([[state.item(3), state.item(4), state.item(5)]]).T # body frame velocity
+        eulers = np.array([[state.item(6),state.item(7), state.item(8)]]).T # euler angles
+        pqr = np.array([[state.item(9), state.item(10), state.item(11)]]).T # body frame angular rates
+        e = euler_to_quaternion(eulers.item(0), eulers.item(1), eulers.item(2)) # quaternion attitude
+
+
 
         # Extract Forces/Moments
-        # fx = forces_moments.item(0)
+        f = forces_moments[0:3] # forces
+        m = forces_moments[3:6] # moments
 
         # Position Kinematics
-        # pos_dot = 
+        # pos_dot = euler_to_rotation(eulers).T @ uvw
+        pos_dot = quaternion_to_rotation(e) @ uvw 
 
         # Position Dynamics
-        # u_dot = 
+        uvw_dot = 1/MAV.mass * f - np.cross(pqr.T, uvw.T).T
 
 
         # rotational kinematics
-        # e0_dot =
+        p = pqr.item(0)
+        q = pqr.item(1)
+        r = pqr.item(2)
+        arr = np.array([[ 0, -p, -q, -r],
+                       [p, 0, r, -q],
+                       [q, -r, 0, p],
+                       [r, q, -p, 0]])
+        e_dot = 0.5 * arr @ e
 
 
         # rotatonal dynamics
-        # p_dot = 
-        
+        gamma = MAV.Jx*MAV.Jz - MAV.Jxz**2
+        gamma1 = MAV.Jxz*(MAV.Jx - MAV.Jy + MAV.Jz)/gamma
+        gamma2 = (MAV.Jz*(MAV.Jz - MAV.Jy) + MAV.Jxz**2)/gamma
+        gamma3 = MAV.Jz/gamma
+        gamma4 = MAV.Jxz/gamma
+        gamma5 = (MAV.Jz - MAV.Jx)/MAV.Jy
+        gamma6 = MAV.Jxz/MAV.Jy
+        gamma7 = ((MAV.Jx - MAV.Jy)*MAV.Jx + MAV.Jxz**2)/gamma
+        gamma8 = MAV.Jx/gamma
+
+        arr1 = np.array([gamma1*p*q - gamma2*q*r, 
+                         gamma5*p*4 - gamma6*(p**2-r**2),
+                         gamma7*p*q - gamma1*q*r]).T
+
+        arr2 = np.array([[gamma3, 0, gamma4],
+                         [0, 1/MAV.Jy, 0],
+                         [gamma4, 0, gamma8]])
+        angular_dot = arr1 + arr2 @ m
 
         # collect the derivative of the states
-        # x_dot = np.array([[north_dot, east_dot,... ]]).T
-        x_dot = np.array([[0,0,0,0,0,0,0,0,0,0,0,0,0]]).T
+        # x_dot = np.array([[north_dot, east_dot, down_dot, udot, vdot, wdot, e0, e1, e2, e3, pdot, qdot, rdot ]]).T
+        x_dot = np.array([[pos_dot.item(0)],
+                          [pos_dot.item(1)],
+                          [pos_dot.item(2)],
+                          [uvw_dot.item(0)],
+                          [uvw_dot.item(1)],
+                          [uvw_dot.item(2)],
+                          [e_dot.item(0)],
+                          [e_dot.item(1)],
+                          [e_dot.item(2)],
+                          [e_dot.item(3)],
+                          [angular_dot.item(0)],
+                          [angular_dot.item(1)],
+                          [angular_dot.item(2)]])
         return x_dot
 
     def _update_true_state(self):
