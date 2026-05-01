@@ -90,9 +90,9 @@ class MavDynamics:
         # x = np.array([[north], [east], [down], [u], [v], [w], [e0], [e1], [e2], [p], [q], [r]]).T
         inertial_pos = np.array([[state.item(0), state.item(1), state.item(2)]]).T
         uvw = np.array([[state.item(3), state.item(4), state.item(5)]]).T # body frame velocity
-        eulers = np.array([[state.item(6),state.item(7), state.item(8)]]).T # euler angles
-        pqr = np.array([[state.item(9), state.item(10), state.item(11)]]).T # body frame angular rates
-        e = euler_to_quaternion(eulers.item(0), eulers.item(1), eulers.item(2)) # quaternion attitude
+        e = np.array([[state.item(6),state.item(7), state.item(8), state.item(9)]]).T # euler angles
+        pqr = np.array([[state.item(10), state.item(11), state.item(12)]]).T # body frame angular rates
+        # e = euler_to_quaternion(eulers.item(0), eulers.item(1), eulers.item(2)) # quaternion attitude
 
 
 
