@@ -120,23 +120,13 @@ class MavDynamics:
 
 
         # rotatonal dynamics
-        gamma = MAV.Jx*MAV.Jz - MAV.Jxz**2
-        gamma1 = MAV.Jxz*(MAV.Jx - MAV.Jy + MAV.Jz)/gamma
-        gamma2 = (MAV.Jz*(MAV.Jz - MAV.Jy) + MAV.Jxz**2)/gamma
-        gamma3 = MAV.Jz/gamma
-        gamma4 = MAV.Jxz/gamma
-        gamma5 = (MAV.Jz - MAV.Jx)/MAV.Jy
-        gamma6 = MAV.Jxz/MAV.Jy
-        gamma7 = ((MAV.Jx - MAV.Jy)*MAV.Jx + MAV.Jxz**2)/gamma
-        gamma8 = MAV.Jx/gamma
+        arr1 = np.array([[MAV.gamma1*p*q - MAV.gamma2*q*r, 
+                         MAV.gamma5*p*r - MAV.gamma6*(p**2-r**2),
+                         MAV.gamma7*p*q - MAV.gamma1*q*r]]).T
 
-        arr1 = np.array([gamma1*p*q - gamma2*q*r, 
-                         gamma5*p*4 - gamma6*(p**2-r**2),
-                         gamma7*p*q - gamma1*q*r]).T
-
-        arr2 = np.array([[gamma3, 0, gamma4],
+        arr2 = np.array([[MAV.gamma3, 0, MAV.gamma4],
                          [0, 1/MAV.Jy, 0],
-                         [gamma4, 0, gamma8]])
+                         [MAV.gamma4, 0, MAV.gamma8]])
         angular_dot = arr1 + arr2 @ m
 
         # collect the derivative of the states
