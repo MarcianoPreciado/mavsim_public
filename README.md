@@ -1,5 +1,11 @@
 # Marciano's Progress
+## Chapter 3 Simulator Progress
+### Quaternion based flight dynamics and forces
+![Chapter 2 simulator progress](./simulator_gifs/chapter-3-simulation.gif)  
+![Chapter 2 simulator progress](./simulator_gifs/chapter-3-simulation-2.gif)  
+
 ## Chapter 2 Simulator Progress
+### Basic state estimation and transformations
 
 This is Marciano's progress on making the flight simulator for chapter 2.
 
