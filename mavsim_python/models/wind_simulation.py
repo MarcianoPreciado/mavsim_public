@@ -16,6 +16,7 @@ class WindSimulation:
         self.gust_flag = gust_flag
 
         #   Dryden gust model parameters (pg 62 UAV book)
+        # Nominal airspeed for gust model
         Va0 = 35. # m/s
         # Low altitude, low turbulence parameters
         sig_u = 1.06 # m/s
