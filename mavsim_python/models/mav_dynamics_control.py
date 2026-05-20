@@ -66,12 +66,16 @@ class MavDynamics(MavDynamicsForces):
         self._wind = quaternion_to_rotation(self._state[6:10]) @ wind_body
 
         # velocity vector relative to the airmass ([ur , vr, wr]= ?)
-
+        Va_body = self._state[3:6] - wind_body
         # compute airspeed (self._Va = ?)
-
+        self._Va = np.linalg.norm(Va_body)
         # compute angle of attack (self._alpha = ?)
-        
+        ur = Va_body.item(0)
+        vr = Va_body.item(1)
+        wr = Va_body.item(2)
+        self._alpha = np.arctan(wr / ur)
         # compute sideslip angle (self._beta = ?)
+        self._beta = np.arcsin(vr / self._Va)
 
     def _forces_moments(self, delta):
         """
