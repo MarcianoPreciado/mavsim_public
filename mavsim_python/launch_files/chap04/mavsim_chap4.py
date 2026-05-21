@@ -19,6 +19,7 @@ from models.wind_simulation import WindSimulation
 from message_types.msg_delta import MsgDelta
 from viewers.view_manager import ViewManager
 import time
+import math
 
 #quitter = QuitListener()
 
@@ -39,10 +40,10 @@ end_time = 60
 print("Press 'Esc' to exit...")
 while sim_time < end_time:
     # ------- set control surfaces -------------
-    delta.elevator = -0.1248
-    delta.aileron = 0.001836
-    delta.rudder = -0.0003026
-    delta.throttle = 0.6768
+    delta.elevator = -0.5  # elevator deflection in radians
+    delta.aileron = 0.05 * math.sin(2*sim_time)  # aileron deflection in radians
+    delta.rudder = 0.05 * math.sin(2 * sim_time)  # rudder deflection in radians
+    delta.throttle = 0.75
 
     # ------- physical system -------------
     current_wind = wind.update()  # get the new wind vector

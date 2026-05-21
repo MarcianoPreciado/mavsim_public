@@ -1,8 +1,26 @@
 # Marciano's Progress
+## Chapter 4 Simulator Progress
+### Forces and Moments
+Added control surfaces
+- Elevon
+- Ailerons
+- Rudder
+Added forces and moments
+- Gravity
+- Lift
+- Drag
+- Moments due to contorl surfaces and wind
+- Thrust
+
+Added wind model
+- Constant wind
+- Gusts based on Dryden gust model  
+
+![Chapter 4 simulator progress](./simulator_gifs/chapter-4-simulation.gif)
 ## Chapter 3 Simulator Progress
 ### Quaternion based flight dynamics and forces
-![Chapter 2 simulator progress](./simulator_gifs/chapter-3-simulation.gif)  
-![Chapter 2 simulator progress](./simulator_gifs/chapter-3-simulation-2.gif)  
+![Chapter 3 simulator progress](./simulator_gifs/chapter-3-simulation.gif)  
+![Chapter 3 simulator progress](./simulator_gifs/chapter-3-simulation-2.gif)  
 
 ## Chapter 2 Simulator Progress
 ### Basic state estimation and transformations
