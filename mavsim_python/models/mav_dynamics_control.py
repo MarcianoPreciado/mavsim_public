@@ -122,7 +122,11 @@ class MavDynamics(MavDynamicsForces):
         Mx = 0.5 * MAV.rho * self._Va**2 * MAV.S_wing * MAV.b * (MAV.C_ell_0 + MAV.C_ell_beta * self._beta + MAV.C_ell_p * (MAV.b / (2 * self._Va)) * p + MAV.C_ell_r * (MAV.b / (2 * self._Va)) * r + MAV.C_ell_delta_a * delta.aileron + MAV.C_ell_delta_r * delta.rudder)
         Mz = 0.5 * MAV.rho * self._Va**2 * MAV.S_wing * MAV.b * (MAV.C_n_0 + MAV.C_n_beta * self._beta + MAV.C_n_p * (MAV.b / (2 * self._Va)) * p + MAV.C_n_r * (MAV.b / (2 * self._Va)) * r + MAV.C_n_delta_a * delta.aileron + MAV.C_n_delta_r * delta.rudder)
 
-        forces_moments = np.array([[fx, fy, fz, Mx, My, Mz]]).T
+        longitudinal_and_lateral_forces = np.array([[fx, fy, fz]]).T
+        forces = fg_vehicle + longitudinal_and_lateral_forces + np.array([[thrust_prop, 0, 0]]).T
+        moments = np.array([[Mx, My, Mz]]).T - np.array([[torque_prop, 0, 0]]).T
+
+        forces_moments = np.array([[forces.item(0), forces.item(1), forces.item(2), moments.item(0), moments.item(1), moments.item(2)]]).T
         return forces_moments
 
     def _motor_thrust_torque(self, Va, delta_t):
