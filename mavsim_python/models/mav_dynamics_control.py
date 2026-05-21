@@ -86,7 +86,7 @@ class MavDynamics(MavDynamicsForces):
         phi, theta, psi = quaternion_to_euler(self._state[6:10])
         p, q, r = self._state[10:13, 0]
         # compute gravitational forces ([fg_x, fg_y, fg_z])
-        fg_vehicle = np.array([[0, 0, MAV.mass * MAV.gravity]]).T
+        fg_vehicle = quaternion_to_rotation(self._state[6:10]).T @ np.array([[0, 0, MAV.mass * MAV.gravity]]).T
 
 
         # compute Lift and Drag coefficients (CL, CD)
