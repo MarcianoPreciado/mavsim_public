@@ -109,8 +109,7 @@ class MavDynamics(MavDynamicsForces):
         F_lift_drag_body = np.array([[fx, 0, fz]]).T
         
         # propeller thrust and torque
-
-        # thrust_prop, torque_prop = self._motor_thrust_torque(self._Va, delta.throttle)
+        thrust_prop, torque_prop = self._motor_thrust_torque(self._Va, delta.throttle)
 
         # compute longitudinal forces in body frame (fx, fz)
 
@@ -127,13 +126,17 @@ class MavDynamics(MavDynamicsForces):
         # compute thrust and torque due to propeller
         ##### TODO #####
         # map delta_t throttle command(0 to 1) into motor input voltage
-        # v_in =
-
-        # Angular speed of propeller (omega_p = ?)
+        Vin = self.V_max * delta_t
+        a = self.rho * self.D_prop**5 / (2 * pi)**2 * self.C_Q0
+        b = self.rho * self.D_prop**4 / (2 * pi) * self.C_Q1 * Va + self.KV * self.KQ/self.R_motor
+        c = self.rho * self.D_prop**3 * self.C_Q2 * Va**2 - self.KQ / self.R_motor * Vin + self.KQ * self.i0
+        roots = np.roots([a, b, c])
+        # Angular speed
+        omega_p = max(roots[roots >= 0])
 
         # thrust and torque due to propeller
-        thrust_prop = 0
-        torque_prop = 0
+        torque_prop = (self.rho * self.D_prop**5 * self.C_Q0/4/pi**2) * omega_p**2 + (self.rho * self.D_prop**4 * self.C_Q1 * Va /2 /pi) * omega_p + self.rho * self.D_prop**3 * self.C_Q2 * Va**2
+        thrust_prop = (self.rho * self.D_prop**4 * self.C_T0 / 4 / pi**2) * omega_p**2 + (self.rho * self.D_prop**3 * self.C_T1 * Va / 2 / pi) * omega_p + self.rho * self.D_prop**2 * self.C_T2 * Va**2
 
         return thrust_prop, torque_prop
 
