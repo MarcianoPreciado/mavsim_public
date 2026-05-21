@@ -84,7 +84,7 @@ class MavDynamics(MavDynamicsForces):
         """
         # extract states (phi, theta, psi, p, q, r)
         phi, theta, psi = quaternion_to_euler(self._state[6:10])
-        p, q, r = self._state[10:13]
+        p, q, r = self._state[10:13, 0]
         # compute gravitational forces ([fg_x, fg_y, fg_z])
         fg_vehicle = np.array([[0, 0, MAV.mass * MAV.gravity]]).T
 
@@ -122,7 +122,6 @@ class MavDynamics(MavDynamicsForces):
         Mx = 0.5 * MAV.rho * self._Va**2 * MAV.S_wing * MAV.b * (MAV.C_ell_0 + MAV.C_ell_beta * self._beta + MAV.C_ell_p * (MAV.b / (2 * self._Va)) * p + MAV.C_ell_r * (MAV.b / (2 * self._Va)) * r + MAV.C_ell_delta_a * delta.aileron + MAV.C_ell_delta_r * delta.rudder)
         Mz = 0.5 * MAV.rho * self._Va**2 * MAV.S_wing * MAV.b * (MAV.C_n_0 + MAV.C_n_beta * self._beta + MAV.C_n_p * (MAV.b / (2 * self._Va)) * p + MAV.C_n_r * (MAV.b / (2 * self._Va)) * r + MAV.C_n_delta_a * delta.aileron + MAV.C_n_delta_r * delta.rudder)
 
-        print(f"fx: {fx}, fy: {fy}, fz: {fz}, Mx: {Mx}, My: {My}, Mz: {Mz}")
         forces_moments = np.array([[fx, fy, fz, Mx, My, Mz]]).T
         return forces_moments
 
