@@ -86,7 +86,7 @@ The `MsgState` object (`true_state`) exposes derived quantities: `Va`, `alpha`, 
 
 ### Coordinate Frame Convention
 
-All positions use **NED (North-East-Down)**. Altitude is positive upward (`altitude = -pd`). Rotations use the `tools/rotations.py` utilities: `euler_to_rotation`, `quaternion_to_euler`, `quaternion_to_rotation`, `Euler2Quaternion`.
+All positions use **NED (North-East-Down)**. Altitude is positive upward (`altitude = -pd`). Rotations use the `tools/rotations.py` utilities: `euler_to_rotation`, `quaternion_to_euler`, `quaternion_to_rotation`, `euler_to_quaternion`.
 
 ### Message Types (Data Flow)
 
