@@ -176,6 +176,7 @@ def trim_objective_fun(x, mav, Va, gamma):
     qdot = gamma5*p*r - gamma6*(p**2 - r**2) + rho * Va**2 *S_wing*c/2/Jy *(C_m_0 + C_m_alpha * alpha + C_m_q * (c / (2 * Va)) * q + C_m_delta_e * delta_elevator)
     rdot = gamma7*p*q - gamma1*q*r + 0.5*rho*Va**2*S_wing*b*(C_r_0 + C_r_beta * beta + C_r_p * (b / (2 * Va)) * p + C_r_r * (b / (2 * Va)) * r + C_r_delta_a * delta_aileron + C_r_delta_r * delta_rudder) + gamma4*Qp
 
-    
-    J = vdot**2 + wdot**2 + phidot**2 + thetadot**2 + psidot**2 + pdot**2 + qdot**2 + rdot**2
+    hdot = u*sin(theta) - v*cos(theta)*sin(phi) - w*cos(theta)*cos(phi)
+    hdot_set = -Va * sin(gamma)
+    J = (hdot - hdot_set)**2 + vdot**2 + wdot**2 + phidot**2 + thetadot**2 + psidot**2 + pdot**2 + qdot**2 + rdot**2
     return J
