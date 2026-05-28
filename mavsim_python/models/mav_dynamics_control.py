@@ -72,7 +72,8 @@ class MavDynamics(MavDynamicsForces):
         ur = Va_body.item(0)
         vr = Va_body.item(1)
         wr = Va_body.item(2)
-        self._alpha = np.arctan(wr / ur)
+
+        self._alpha = np.arctan2(wr, ur)
         # compute sideslip angle (self._beta = ?)
         self._beta = np.arcsin(vr / self._Va)
 
