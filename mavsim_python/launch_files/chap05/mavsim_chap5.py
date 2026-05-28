@@ -32,7 +32,7 @@ viewers = ViewManager(mav=True,
                       video=False, video_name='chap5.mp4')
 
 # use compute_trim function to compute trim state and trim input
-Va = 25.
+Va = 35.
 gamma = 0.*np.pi/180.
 trim_state, trim_input = compute_trim(mav, Va, gamma)
 mav._state = trim_state  # set the initial state of the mav to the trim state
