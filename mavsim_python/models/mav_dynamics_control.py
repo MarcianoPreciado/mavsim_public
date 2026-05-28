@@ -58,11 +58,13 @@ class MavDynamics(MavDynamicsForces):
         gust = wind[3:6]
 
         # convert steady-state wind vector from world to body frame
-        wind_body = quaternion_to_rotation(self._state[6:10]).T @ steady_state
+        R_vb = quaternion_to_rotation(self._state[6:10]).T
+        R_bv = R_vb.T
+        wind_body = R_vb @ steady_state
         # add the gust 
         wind_body += gust
         # convert total wind to world frame
-        self._wind = quaternion_to_rotation(self._state[6:10]) @ wind_body
+        self._wind = R_bv @ wind_body
 
         # velocity vector relative to the airmass ([ur , vr, wr]= ?)
         Va_body = self._state[3:6] - wind_body
