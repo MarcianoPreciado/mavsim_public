@@ -30,6 +30,7 @@ from parameters.aerosonde_parameters import (
     # yaw moment
     C_r_0, C_r_beta, C_r_p, C_r_r, C_r_delta_a, C_r_delta_r,
 )
+import parameters.aerosonde_parameters as MAV
 from tools.rotations import euler_to_quaternion, quaternion_to_euler
 from message_types.msg_delta import MsgDelta
 import time
@@ -41,19 +42,19 @@ def compute_trim(mav, Va, gamma):
     ##### TODO #####
     # set the initial conditions of the optimization
     e0 = euler_to_quaternion(0., gamma, 0.)
-    state0 = np.array([[5],  # pn
-                   [5],  # pe
-                   [-Va * sin(gamma)],  # pd
-                   [0],  # u
-                   [0.], # v
-                   [0.], # w
+    state0 = np.array([[MAV.north0],  # pn
+                   [MAV.east0],  # pe
+                   [MAV.down0],  # pd
+                   [MAV.u0],  # u
+                   [MAV.v0], # v
+                   [MAV.w0], # w
                    [1],  # e0
                    [0],  # e1
                    [0],  # e2
                    [0],  # e3
-                   [0.], # p
-                   [0.], # q
-                   [0.]  # r
+                   [MAV.p0], # p
+                   [MAV.q0], # q
+                   [MAV.r0]  # r
                    ])
     delta0 = np.array([[0],  # elevator
                        [0],  # aileron
