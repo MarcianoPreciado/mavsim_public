@@ -19,7 +19,7 @@ def compute_model(mav, trim_state, trim_input):
     a_V1, a_V2, a_V3 = compute_tf_model(mav, trim_state, trim_input)
 
     # write transfer function gains to file
-    file = open('models/model_coef.py', 'w')
+    file = open('mavsim_python/models/model_coef.py', 'w')
     file.write('import numpy as np\n')
     file.write('x_trim = np.array([[%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f]]).T\n' %
                (trim_state.item(0), trim_state.item(1), trim_state.item(2), trim_state.item(3),
