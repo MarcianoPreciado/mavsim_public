@@ -101,66 +101,6 @@ def compute_trim(mav, Va, gamma):
 
 
 def trim_objective_fun(x, mav, Va, gamma):
-    # # objective function to be minimized
-    # pn = x.item(0)
-    # pe = x.item(1)
-    # pd = x.item(2)
-    # u = x.item(3)
-    # v = x.item(4)
-    # w = x.item(5)
-    # e0 = x.item(6)
-    # e1 = x.item(7)
-    # e2 = x.item(8)
-    # e3 = x.item(9)
-    # p = x.item(10)
-    # q = x.item(11)
-    # r = x.item(12)
-    # delta_elevator = x.item(13)
-    # delta_aileron = x.item(14)
-    # delta_rudder = x.item(15)
-    # delta_throttle = x.item(16)
-
-    # phi, theta, psi = quaternion_to_euler(np.array([[e0], [e1], [e2], [e3]]))
-    # # Compute the helpful variables for state derivatives
-    # h = -pd
-    # alpha = 0
-    # beta = 0
-    # # True forms
-    # sigmoid = (1 + exp(-M * (alpha - alpha0)) + exp(M * (beta + alpha0))) / ((1 + exp(-M * (alpha - alpha0))) * (1 + exp(M * (beta + alpha0))))
-    # CL = (1 - sigmoid) * (C_L_0 + C_L_alpha * alpha) + sigmoid * 2 * np.sign(alpha) * (sin(alpha))**2 * cos(alpha)
-    # CD = C_D_p + (C_L_0 + C_L_alpha * alpha)**2 / (pi * e * AR)
-
-    # CL = C_L_0 + C_L_alpha * alpha
-    # CD = C_D_0 + C_D_alpha * alpha
-
-    # CX = -CD * cos(alpha) + CL * sin(alpha)
-    # CXq = -C_D_q * cos(alpha) + C_L_q * sin(alpha)
-    # CXdelta_e = -C_D_delta_e * cos(alpha) + C_L_delta_e * sin(alpha)
-    # CZ = -CD * sin(alpha) - CL * cos(alpha)
-    # CZq = -C_D_q * sin(alpha) - C_L_q * cos(alpha)
-    # CZdelta_e = -C_D_delta_e * sin(alpha) - C_L_delta_e * cos(alpha)
-
-    # # compute the state derivatives using the nonlinear equations of motion
-    # # ignore pn, pe, pd since they are intended to be at steady rates of change
-    # Tp, Qp = mav._motor_thrust_torque(mav._Va, delta_throttle)
-    
-    # udot = r*v - q*w - gravity * sin(theta) + rho * mav._Va**2 * S_wing / (2 * mass) * (CX + CXq * c*q/(2*mav._Va) + CXdelta_e * delta_elevator) + Tp/mass
-    # vdot = p*w - r*u + gravity * cos(theta) * sin(phi) + rho * mav._Va**2 * S_wing / (2 * mass) * (C_Y_0 + C_Y_beta * beta + C_Y_p * (b / (2 * mav._Va)) * p + C_Y_r * (b / (2 * mav._Va)) * r + C_Y_delta_a * delta_aileron + C_Y_delta_r * delta_rudder)
-    # wdot = q*u - p*v + gravity * cos(theta) * cos(phi) + rho * mav._Va**2 * S_wing / (2 * mass) * (CZ + CZq * c*q/(2*mav._Va) + CZdelta_e * delta_elevator)
-
-    # phidot = p + q*sin(phi)*tan(theta) + r*cos(phi)*tan(theta)
-    # thetadot = q*cos(phi) - r*sin(phi)
-    # psidot = q*sin(phi)/cos(theta) + r*cos(phi)/cos(theta)
-
-    # pdot = gamma1*p*q - gamma2*q*r + 0.5*rho*mav._Va**2*S_wing*b*(C_p_0 + C_p_beta * beta + C_p_p * (b / (2 * mav._Va)) * p + C_p_r * (b / (2 * mav._Va)) * r + C_p_delta_a * delta_aileron + C_p_delta_r * delta_rudder) + gamma3*Qp
-    # qdot = gamma5*p*r - gamma6*(p**2 - r**2) + rho * mav._Va**2 *S_wing*c/2/Jy *(C_m_0 + C_m_alpha * alpha + C_m_q * (c / (2 * mav._Va)) * q + C_m_delta_e * delta_elevator)
-    # rdot = gamma7*p*q - gamma1*q*r + 0.5*rho*mav._Va**2*S_wing*b*(C_r_0 + C_r_beta * beta + C_r_p * (b / (2 * mav._Va)) * p + C_r_r * (b / (2 * mav._Va)) * r + C_r_delta_a * delta_aileron + C_r_delta_r * delta_rudder) - gamma4*Qp
-
-    # hdot = u*sin(theta) - v*cos(theta)*sin(phi) - w*cos(theta)*cos(phi)
-    # hdot_set = -Va * sin(gamma)
-    
-    # J = (hdot - hdot_set)**2 + vdot**2 + wdot**2 + phidot**2 + thetadot**2 + psidot**2 + pdot**2 + qdot**2 + rdot**2
-
     x_dot_star = np.array([[0.],  # (0)
                            [0.],   # (1)
                            [-Va * sin(gamma)],   # (2)
@@ -175,14 +115,14 @@ def trim_objective_fun(x, mav, Va, gamma):
                            [0.],    # (11)
                            [0.]])   # (12)
 
-    state = x[0:13]
+    state = x[0:13].reshape((-1, 1)) # must be (13,1) column vector; 1D causes Va_body to broadcast to (3,3) giving sqrt(3)*Va
     delta = MsgDelta(elevator=x.item(13), aileron=x.item(14), rudder=x.item(15), throttle=x.item(16))
     wind = np.zeros((6, 1))
     
-    mav._state = state
+    mav._state = state  
     mav._update_velocity_data(wind)
     forces_moments = mav._forces_moments(delta)
     xdot = mav._f(state, forces_moments)
 
-    J = np.sum((x_dot_star[2:13]-xdot[2:13])**2)
+    J = np.linalg.norm(x_dot_star[2:13]-xdot[2:13])**2.0
     return J
