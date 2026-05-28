@@ -58,11 +58,13 @@ class MavDynamics(MavDynamicsForces):
         gust = wind[3:6]
 
         # convert steady-state wind vector from world to body frame
-        wind_body = quaternion_to_rotation(self._state[6:10]).T @ steady_state
+        R_vb = quaternion_to_rotation(self._state[6:10]).T
+        R_bv = R_vb.T
+        wind_body = R_vb @ steady_state
         # add the gust 
         wind_body += gust
         # convert total wind to world frame
-        self._wind = quaternion_to_rotation(self._state[6:10]) @ wind_body
+        self._wind = R_bv @ wind_body
 
         # velocity vector relative to the airmass ([ur , vr, wr]= ?)
         Va_body = self._state[3:6] - wind_body
@@ -72,7 +74,8 @@ class MavDynamics(MavDynamicsForces):
         ur = Va_body.item(0)
         vr = Va_body.item(1)
         wr = Va_body.item(2)
-        self._alpha = np.arctan(wr / ur)
+
+        self._alpha = np.arctan2(wr, ur)
         # compute sideslip angle (self._beta = ?)
         self._beta = np.arcsin(vr / self._Va)
 
@@ -84,7 +87,7 @@ class MavDynamics(MavDynamicsForces):
         """
         # extract states (phi, theta, psi, p, q, r)
         phi, theta, psi = quaternion_to_euler(self._state[6:10])
-        p, q, r = self._state[10:13, 0]
+        p, q, r = self._state[10:13].flatten()
         # compute gravitational forces ([fg_x, fg_y, fg_z])
         fg_vehicle = quaternion_to_rotation(self._state[6:10]).T @ np.array([[0, 0, MAV.mass * MAV.gravity]]).T
 
@@ -138,7 +141,10 @@ class MavDynamics(MavDynamicsForces):
         c = MAV.rho * MAV.D_prop**3 * MAV.C_Q2 * Va**2 - MAV.KQ / MAV.R_motor * Vin + MAV.KQ * MAV.i0
         roots = np.roots([a, b, c])
         # Angular speed
-        omega_p = max(roots[roots >= 0])
+        try:
+            omega_p = max(roots[roots >= 0])
+        except:
+            omega_p = -c/b
 
         # thrust and torque due to propeller
         torque_prop = (MAV.rho * MAV.D_prop**5 * MAV.C_Q0/4/pi**2) * omega_p**2 + (MAV.rho * MAV.D_prop**4 * MAV.C_Q1 * Va /2 /pi) * omega_p + MAV.rho * MAV.D_prop**3 * MAV.C_Q2 * Va**2
