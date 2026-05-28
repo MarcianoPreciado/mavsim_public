@@ -139,7 +139,10 @@ class MavDynamics(MavDynamicsForces):
         c = MAV.rho * MAV.D_prop**3 * MAV.C_Q2 * Va**2 - MAV.KQ / MAV.R_motor * Vin + MAV.KQ * MAV.i0
         roots = np.roots([a, b, c])
         # Angular speed
-        omega_p = max(roots[roots >= 0])
+        try:
+            omega_p = max(roots[roots >= 0])
+        except:
+            omega_p = -c/b
 
         # thrust and torque due to propeller
         torque_prop = (MAV.rho * MAV.D_prop**5 * MAV.C_Q0/4/pi**2) * omega_p**2 + (MAV.rho * MAV.D_prop**4 * MAV.C_Q1 * Va /2 /pi) * omega_p + MAV.rho * MAV.D_prop**3 * MAV.C_Q2 * Va**2
