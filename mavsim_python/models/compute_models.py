@@ -10,7 +10,7 @@ from tools.rotations import euler_to_quaternion, quaternion_to_euler
 import parameters.aerosonde_parameters as MAV
 from parameters.simulation_parameters import ts_simulation as Ts
 from message_types.msg_delta import MsgDelta
-
+from math import cos
 
 def compute_model(mav, trim_state, trim_input):
     # Note: this function alters the mav private variables
@@ -91,18 +91,38 @@ def compute_tf_model(mav, trim_state, trim_input):
     alpha_trim = mav._alpha
     phi, theta_trim, psi = quaternion_to_euler(trim_state[6:10])
 
-    ###### TODO ######
+    rho = MAV.rho
+    S = MAV.S_wing
+    c = MAV.c
+    b = MAV.b
+    Va = mav._Va
+    beta = mav._beta
+    Cpp = MAV.C_p_p
+    Cpda = MAV.C_p_delta_a
+    Cmq = MAV.C_m_q
+    Cma = MAV.C_m_alpha
+    Cmde = MAV.C_m_delta_e
+    Jy = MAV.Jy
+    CD0 = MAV.C_D_0
+    CDa = MAV.C_D_alpha
+    CDde = MAV.C_D_delta_e
+    m = MAV.mass
+    g = MAV.gravity
+
+    dTdVa = dT_dVa(mav, Va, trim_input.throttle)
+    dTddt = dT_ddelta_t(mav, Va, trim_input.throttle)
+
     # define transfer function constants
-    a_phi1 = 0
-    a_phi2 = 0
-    a_theta1 = 0
-    a_theta2 = 0
-    a_theta3 = 0
+    a_phi1 = -1/2 * rho * Va**2 * S * b * Cpp * b / (2 * Va)
+    a_phi2 = rho * Va**2 * S * b * Cpda / 2
+    a_theta1 = -1 * rho * Va**2 * c * S / (2 * Jy) * Cmq * c / (2 * Va)
+    a_theta2 = -1 * rho * Va**2 * c * S / (2 * Jy) * Cma
+    a_theta3 = rho * Va**2 * c * S / (2 * Jy) * Cmde
 
     # Compute transfer function coefficients using new propulsion model
-    a_V1 = 0
-    a_V2 = 0
-    a_V3 = 0
+    a_V1 = rho * Va * S / m * (CD0 + CDa * alpha_trim + CDde * trim_input.elevator) - dTdVa / m
+    a_V2 = dTddt / m
+    a_V3 = g * cos(theta_trim - alpha_trim)
 
     return Va_trim, alpha_trim, theta_trim, a_phi1, a_phi2, a_theta1, a_theta2, a_theta3, a_V1, a_V2, a_V3
 
@@ -176,15 +196,19 @@ def df_du(mav, x_euler, delta):
 def dT_dVa(mav, Va, delta_t):
     # returns the derivative of motor thrust with respect to Va
     eps = 0.01
+    
+    T1, _ = mav._motor_thrust_torque(Va, delta_t)
+    T2, _ = mav._motor_thrust_torque(Va + eps, delta_t)
+    dT_dVa = (T2 - T1) / eps
 
-    ##### TODO #####
-    dT_dVa = 0
     return dT_dVa
 
 def dT_ddelta_t(mav, Va, delta_t):
     # returns the derivative of motor thrust with respect to delta_t
     eps = 0.01
 
-    ##### TODO #####
-    dT_ddelta_t = 0
+    T1, _ = mav._motor_thrust_torque(Va, delta_t)
+    T2, _ = mav._motor_thrust_torque(Va, delta_t + eps)
+    dT_ddelta_t = (T2 - T1) / eps
+
     return dT_ddelta_t
