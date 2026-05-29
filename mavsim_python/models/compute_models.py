@@ -190,17 +190,23 @@ def df_dx(mav, x_euler, delta):
     # take partial of f_euler with respect to x_euler
     eps = 0.01  # deviation
 
-    ##### TODO #####
-    A = np.zeros((12, 12))  # Jacobian of f wrt x
+    f1 = f_euler(mav, x_euler, delta)
+    N = x_euler.size
+
+    A = np.hstack([f_euler(mav, x_euler + eps * np.eye(N)[:, [i]], delta) - f1 for i in range(N)]) / eps  # Jacobian of f wrt x
     return A
 
 
 def df_du(mav, x_euler, delta):
     # take partial of f_euler with respect to input
     eps = 0.01  # deviation
+    
+    f1 = f_euler(mav, x_euler, delta)
+    u = delta.to_array()
+    M = u.size # assuming 4 inputs (delta_e, delta_a, delta_r, delta_t)
 
-    ##### TODO #####
-    B = np.zeros((12, 4))  # Jacobian of f wrt u
+    B = np.hstack([f_euler(mav, x_euler, delta.from_array(u + eps * np.eye(M)[:, [i]])) - f1 for i in range(M)]) / eps  # Jacobian of f wrt u
+    B = B[:, 0:4]  # only take columns corresponding to control inputs, ignore gimbal inputs
     return B
 
 
