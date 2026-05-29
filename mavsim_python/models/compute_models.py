@@ -146,17 +146,28 @@ def compute_ss_model(mav, trim_state, trim_input):
 def euler_state(x_quat):
     # convert state x with attitude represented by quaternion
     # to x_euler with attitude represented by Euler angles
+    p = x_quat[0:3]
+    v = x_quat[3:6]
+    e = x_quat[6:10]
+    omega = x_quat[10:13]
+
+    theta = np.array(quaternion_to_euler(e)).reshape(-1,1)
     
-    ##### TODO #####
-    x_euler = np.zeros((12,1))
+    x_euler = np.concatenate((p, v, theta, omega))
     return x_euler
 
 def quaternion_state(x_euler):
     # convert state x_euler with attitude represented by Euler angles
     # to x_quat with attitude represented by quaternions
 
-    ##### TODO #####
-    x_quat = np.zeros((13,1))
+    p = x_euler[0:3]
+    v = x_euler[3:6]
+    theta = x_euler[6:9]
+    omega = x_euler[9:12]
+
+    e = np.array(euler_to_quaternion(theta.item(0), theta.item(1), theta.item(2))).reshape(-1,1)
+
+    x_quat = np.concatenate((p, v, e, omega))
     return x_quat
 
 def f_euler(mav, x_euler, delta):
