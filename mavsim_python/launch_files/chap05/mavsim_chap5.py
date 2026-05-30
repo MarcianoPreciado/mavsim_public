@@ -17,7 +17,7 @@ import parameters.simulation_parameters as SIM
 from models.mav_dynamics_control import MavDynamics
 from models.wind_simulation import WindSimulation
 from models.trim import compute_trim
-from models.compute_models import compute_model
+from models.compute_models import compute_model, compute_ss_model
 from tools.signals import Signals
 from viewers.view_manager import ViewManager
 import time
@@ -41,6 +41,38 @@ delta = trim_input  # set input to constant constant trim input
 # # compute the state space model linearized about trim
 compute_model(mav, trim_state, trim_input)
 
+# Group into conjugate pairs and extract ωₙ, ζ
+def evaluate_dynamics(A):
+    eig = np.linalg.eigvals(A)
+    for lam in eig:
+        if abs(lam) < 1e-6:       # handle zero eigenvalues
+            print(f"λ = {lam:.4f} (zero eigenvalue)")
+            continue
+        if lam.imag >= 0:          # take one from each pair
+            wn  = abs(lam)         # |λ| = ωₙ
+            zeta = abs(lam.real) / wn   # Re(λ)/|λ| = ζ
+            period = 2*np.pi / wn if wn > 1e-6 else float('inf')  # handle zero frequency
+
+            print(f"λ = {lam:.4f}")
+            print(f"  ωₙ = {wn:.4f}  rad/s")
+            print(f"  ζ  = {zeta:.4f}")
+            print(f"  period = {period:.4f} s")
+            stability = "stable" if lam.real < 0 else "unstable" 
+            damping = "undamped" if abs(zeta) < 1e-6 else "underdamped" if zeta < 1 else "critically damped" if zeta == 1 else "overdamped"
+            print(f"  mode is {stability} and {damping}")
+            print()
+
+A_lon, B_lon, A_lat, B_lat = compute_ss_model(mav, trim_state, trim_input)
+
+print("### Longitudinal eigenvalues and modes ###")
+eig_lon = np.linalg.eigvals(A_lon)
+evaluate_dynamics(A_lon)
+
+print("### Lateral eigenvalues and modes ###")
+eig_lat = np.linalg.eigvals(A_lat)
+evaluate_dynamics(A_lat)
+
+
 # this signal will be used to excite modes
 input_signal = Signals(amplitude=0.3,
                        duration=0.3,
@@ -61,9 +93,9 @@ while sim_time < end_time:
     #current_wind = wind.update()  # get the new wind vector
     current_wind = np.zeros((6, 1))
     # this input excites the phugoid mode by adding an elevator impulse at t = 5.0 s
-    #delta.elevator = delta_e_trim + input_signal.impulse(sim_time)
+    # delta.elevator = delta_e_trim + input_signal.impulse(sim_time)
     # this input excites the roll and spiral divergence modes by adding an aileron doublet at t = 5.0 s
-    # delta.aileron = delta_a_trim + input_signal.doublet(sim_time)
+    delta.aileron = delta_a_trim + input_signal.doublet(sim_time)
     # this input excites the dutch roll mode by adding a rudder doublet at t = 5.0 s
     # delta.rudder = delta_r_trim + input_signal.doublet(sim_time)
 

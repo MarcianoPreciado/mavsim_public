@@ -1,4 +1,29 @@
 # Marciano's Progress
+## Chapter 5 Simulator Progress
+### Trim and Linear Design Models
+Here we used the non-linear physics model to construct a linear model around fixed level flight, ie flying in trim.
+
+### Longitudinal Dynamics
+#### Elevator Impulse
+See here how the MAV flying in trim with a sudden impulse on the elevator exibits:
+1. short-period mode dynamics
+2. phugoid mode dynamics  
+![Longitudinal Dynamics](simulator_gifs/chapter-5-sim-longitudinal-dynamics.gif)
+![Longitudinal Dynamics Chart](simulator_gifs/chapter-5-sim-longitudinal-dynamics-charts.gif)
+
+### Lateral Dynamics
+From the rudder and aileron impulses you can see 
+1. roll mode
+2. spiral-divergence mode
+3. dutch-roll modes
+
+#### Rudder Impulse
+![Lateral Dynamics (rudder)](./simulator_gifs/chapter-5-sim-lateral-dynamics-rudder-impulse.gif)
+![Lateral Dynamics Chart (rudder)](./simulator_gifs/chapter-5-sim-lateral-dynamics-rudder-impulse-chart.gif)
+
+#### Aileron Impulse
+![Lateral Dynamics (aileron)](./simulator_gifs/chapter-5-sim-lateral-dynamics-aileron-impulse.gif)
+![Lateral Dynamics Chart (aileron)](./simulator_gifs/chapter-5-sim-lateral-dynamics-aileron-impulse-chart.gif)
 ## Chapter 4 Simulator Progress
 ### Forces and Moments
 Added control surfaces
