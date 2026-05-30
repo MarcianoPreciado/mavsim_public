@@ -198,14 +198,32 @@ def f_euler(mav, x_euler, delta):
     # partial of quaternion_to_euler(quat) with respect to quat
     # compute partial quaternion_to_euler(quat) with respect to quat
     # dEuler/dt = dEuler/dquat * dquat/dt
+    
+    # Tq(xe)
     x_quat = quaternion_state(x_euler)
     mav._state = x_quat
     mav._update_velocity_data()
+    # ƒq(Tq(xe), u)
     forces_moments = mav._forces_moments(delta)
     f_quat = mav._f(x_quat, forces_moments)
-    f_euler_ = euler_state(f_quat)
+    
+    # dTe_dxq (Tq(xe))
+    # Te is euler_to_quaternion
+    # Tq is quaternion_to_euler
+    # Tq(xe) is quaternion_state(x_euler)
+    # So dTe_dxq is Te(quaternion_state(x_euler) + eps - Te())
+    dTe_dxq_of_xq = np.zeros((x_euler.size, x_quat.size))
+    Te_out = x_euler
+    n = x_quat.size # number of quaternion states
+    eps = 0.001
+    for i in range(n):
+        x_quat_i = x_quat + eps * np.eye(n)[:, [i]]
+        Te_outi = euler_state(x_quat_i)
+        
+        dTe_dquat_i = (Te_outi - Te_out) / eps
+        dTe_dxq_of_xq[:, [i]] = dTe_dquat_i
 
-    return f_euler_
+    return dTe_dxq_of_xq @ f_quat
 
 def df_dx(mav, x_euler, delta):
     # take partial of f_euler with respect to x_euler
