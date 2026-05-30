@@ -201,8 +201,9 @@ def f_euler(mav, x_euler, delta):
     x_quat = quaternion_state(x_euler)
     mav._state = x_quat
     mav._update_velocity_data()
-    ##### TODO #####
-    f_euler_ = np.zeros((12,1))
+    forces_moments = mav._forces_moments(delta)
+    f_quat = mav._f(x_quat, forces_moments)
+    f_euler_ = euler_state(f_quat)
 
     return f_euler_
 
