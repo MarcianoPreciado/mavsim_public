@@ -141,8 +141,8 @@ def compute_ss_model(mav, trim_state, trim_input):
         [0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     ])
     E2 = np.array([
-        [0, 1, 0, 0],
-        [1, 0, 0, 0]
+        [1, 0, 0, 0],
+        [0, 0, 0, 1]
     ])
     E3 = np.array([
         [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
@@ -152,8 +152,8 @@ def compute_ss_model(mav, trim_state, trim_input):
         [0, 0, 0, 0, 0,	 0, 0, 0, 1, 0, 0, 0]
     ])
     E4 = np.array([
-        [0, 0, 1, 0],
-        [0, 0, 0, 1]
+        [0, 1, 0, 0],
+        [0, 0, 1, 0]
     ])
 
     A_lon = E1 @ A @ E1.T
