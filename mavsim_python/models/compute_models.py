@@ -213,20 +213,30 @@ def df_dx(mav, x_euler, delta):
 
     f1 = f_euler(mav, x_euler, delta)
     N = x_euler.size
-
-    A = np.hstack([f_euler(mav, x_euler + eps * np.eye(N)[:, [i]], delta) - f1 for i in range(N)]) / eps  # Jacobian of f wrt x
+    A = np.zeros((N, N))
+    for i in range(N):
+        x_euler_i = x_euler + eps * np.eye(N)[:, [i]]
+        df_dxi = (f_euler(mav, x_euler_i, delta) - f1) / eps
+        A[:,[i]] = df_dxi
     return A
 
 
 def df_du(mav, x_euler, delta):
     # take partial of f_euler with respect to input
     eps = 0.01  # deviation
-    
     f1 = f_euler(mav, x_euler, delta)
     u = delta.to_array()
-    M = u.size # assuming 4 inputs (delta_e, delta_a, delta_r, delta_t)
+    N = x_euler.size
+    M = u.size
 
-    B = np.hstack([f_euler(mav, x_euler, delta.from_array(u + eps * np.eye(M)[:, [i]])) - f1 for i in range(M)]) / eps  # Jacobian of f wrt u
+    B = np.zeros((N, M))
+    for i in range(M):
+        ui = u + eps * np.eye(M)[:, [i]]
+        delta_i = MsgDelta()
+        delta_i.from_array(ui)
+        df_dui = (f_euler(mav, x_euler, delta_i) - f1) / eps
+        B[:,[i]] = df_dui
+
     B = B[:, 0:4]  # only take columns corresponding to control inputs, ignore gimbal inputs
     return B
 
