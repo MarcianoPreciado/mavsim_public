@@ -44,7 +44,6 @@ class Autopilot:
         Qlat = diag ([.001 , .01 , .1 , 100, 1, 100]) # v, p, r , phi , chi , intChi
         Rlat = diag ([1 , 1]) # a, r
         Plat = solve_continuous_are(AAlat, BBlat, Qlat, Rlat)
-        Plat = Plon = np.zeros((6,6))
         self.Klat = inv(Rlat) @ BBlat.T @ Plat
         
         u_trim = M.x_trim[3] # state variable u
