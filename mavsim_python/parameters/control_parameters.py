@@ -38,7 +38,7 @@ wn_altitude = 0
 zeta_altitude = 0
 altitude_kp = 0
 altitude_ki = 0
-altitude_zone = 5
+altitude_zone = 10
 
 #---------airspeed hold using throttle---------------
 wn_airspeed_throttle = 0
