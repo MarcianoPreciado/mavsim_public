@@ -57,7 +57,7 @@ class Autopilot:
                     axis=0)
         BBlon = concatenate((M.B_lon, zeros((2, 2))), axis=0)
         # Qlon = diag ([10 , 10 , .001 , .01 , 10 , 100 , 100]) # u, w, q , theta , h, intH , intVa
-        Qlon = diag([10.0, 10.0, 10, 5, 10.0, 60.0, 50.0]) # u, w, q, theta, h, intH, intVa
+        Qlon = diag([10.0, 10.0, 100, 10, 50.0, 60.0, 50.0]) # u, w, q, theta, h, intH, intVa
         Rlon = diag ([1 , 1]) # e , t
         Plon = solve_continuous_are(AAlon, BBlon, Qlon, Rlon)
         self.Klon = inv(Rlon) @ BBlon.T @ Plon
