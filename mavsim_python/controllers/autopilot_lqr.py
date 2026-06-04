@@ -42,7 +42,7 @@ class Autopilot:
                     axis=0)
         BBlat = concatenate((M.B_lat, zeros((1,2))), axis=0)
         # Qlat = diag ([.001 , .01 , .1 , 100, 1, 100]) # v, p, r , phi , chi , intChi
-        Qlat = diag ([.001 , .01 , .1 , 10, 1, 10]) # v, p, r , phi , chi , intChi
+        Qlat = diag([0.01, 0.01, 0.01, 100.0, 10.0, 100.0]) # v, p, r, phi, chi, intChi
         Rlat = diag ([1 , 1]) # a, r
         Plat = solve_continuous_are(AAlat, BBlat, Qlat, Rlat)
         self.Klat = inv(Rlat) @ BBlat.T @ Plat
@@ -50,14 +50,14 @@ class Autopilot:
         u_trim = M.x_trim.item(3) # state variable u
         w_trim = M.x_trim.item(4) # state variable w
         Va = AP.Va0
-        CrLon = array([[0, 0, 0, 0, 1], [1.0/Va, 1.0/Va, 0, 0, 0]])
+        CrLon = array([[0, 0, 0, 0, 1], [u_trim/Va, w_trim/Va, 0, 0, 0]])
         AAlon = concatenate((
                     concatenate((M.A_lon, zeros((5,2))), axis=1),
                     concatenate((CrLon, zeros((2,2))), axis=1)),
                     axis=0)
         BBlon = concatenate((M.B_lon, zeros((2, 2))), axis=0)
         # Qlon = diag ([10 , 10 , .001 , .01 , 10 , 100 , 100]) # u, w, q , theta , h, intH , intVa
-        Qlon = diag([10.0, 10.0, 0.01, 0.01, 100.0, 10.0, 10.0]) # u, w, q , theta , h, intH , intVa
+        Qlon = diag([10.0, 10.0, 0.01, 0.01, 10.0, 100.0, 100.0]) # u, w, q, theta, h, intH, intVa
         Rlon = diag ([1 , 1]) # e , t
         Plon = solve_continuous_are(AAlon, BBlon, Qlon, Rlon)
         self.Klon = inv(Rlon) @ BBlon.T @ Plon
