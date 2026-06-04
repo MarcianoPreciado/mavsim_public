@@ -57,7 +57,7 @@ class Autopilot:
                     axis=0)
         BBlon = concatenate((M.B_lon, zeros((2, 2))), axis=0)
         # Qlon = diag ([10 , 10 , .001 , .01 , 10 , 100 , 100]) # u, w, q , theta , h, intH , intVa
-        Qlon = diag([10.0, 10.0, 0.01, 0.01, 10.0, 100.0, 100.0]) # u, w, q, theta, h, intH, intVa
+        Qlon = diag([10.0, 10.0, 10, 5, 10.0, 60.0, 50.0]) # u, w, q, theta, h, intH, intVa
         Rlon = diag ([1 , 1]) # e , t
         Plon = solve_continuous_are(AAlon, BBlon, Qlon, Rlon)
         self.Klon = inv(Rlon) @ BBlon.T @ Plon
@@ -94,9 +94,15 @@ class Autopilot:
         eh = state.altitude - hr
         self.integratorAltitude += (eh + self.errorAltitudeD1) * self.Ts / 2
         self.errorAltitudeD1 = eh
+        if abs(eh) < 0.1*AP.altitude_zone:
+            self.integratorAltitude = 0
+            self.errorAltitudeD1 = 0
 
         self.integratorAirspeed += (eVa + self.errorAirspeedD1) * self.Ts / 2
         self.errorAirspeedD1 = eVa
+        if abs(eVa) < 0.12:
+            self.integratorAirspeed = 0
+            self.errorAirspeedD1 = 0
 
         xLon = array([[ eVa * cos(state.alpha) ] , # u
                       [ eVa * sin(state.alpha) ] , # w
