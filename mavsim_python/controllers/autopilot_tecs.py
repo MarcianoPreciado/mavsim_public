@@ -5,6 +5,7 @@ autopilot block for mavsim_python - Total Energy Control System
         2/14/2020 - RWB
 """
 import numpy as np
+from legacy_mavsim_python.chap11.mavsim_chap11 import Va
 import parameters.control_parameters as AP
 import parameters.aerosonde_parameters as MAV
 from tools.transfer_function import TransferFunction
@@ -14,6 +15,14 @@ from controllers.pd_control_with_rate import PDControlWithRate
 from message_types.msg_state import MsgState
 from message_types.msg_delta import MsgDelta
 
+def saturate(input, low_limit, up_limit):
+    if input <= low_limit:
+        output = low_limit
+    elif input >= up_limit:
+        output = up_limit
+    else:
+        output = input
+    return output
 
 class Autopilot:
     def __init__(self, ts_control):
@@ -41,14 +50,14 @@ class Autopilot:
         self.E_kp = 0
         self.E_ki = 0
         # pitch gains
-        self.L_kp = 0
-        self.L_ki = 0
+        self.B_kp = 0
+        self.B_ki = 0
         # saturated altitude error
         self.h_error_max = 0  # meters
         self.E_integrator = 0
-        self.L_integrator = 0
+        self.B_integrator = 0
         self.E_error_d1 = 0
-        self.L_error_d1 = 0
+        self.B_error_d1 = 0
         self.delta_t_d1 = 0
         self.theta_c_d1 = 0
         self.theta_c_max = 0
@@ -62,7 +71,27 @@ class Autopilot:
 
 
         # longitudinal TECS autopilot
+        m = MAV.mass
+        g = AP.gravity
+        hc = cmd.altitude_command
+        h = state.altitude
+        he_bar = AP.altitude_zone
+        Uerror = m*g*saturate(hc - h, 0, he_bar)
+        
+        Vac = cmd.airspeed_command
+        Va = state.Va
+        Kerror = 0.5*m*g*(Vac**2 - Va**2)
+        
+        E = Uerror + Kerror
+        B = Uerror - Kerror
 
+        self.E_integrator += (E + self.E_error_d1) * self.Ts / 2
+        self.B_integrator += (B + self.B_error_d1) * self.Ts / 2
+        self.E_error_d1 = E
+        self.B_error_d1 = B
+
+        delta_t = self.E_kp*E + self.E_ki*self.E_integrator
+        theta_c = self.B_kp*B + self.B_ki*self.B_integrator
 
         # construct output and commanded states
         delta = MsgDelta(elevator=0,
