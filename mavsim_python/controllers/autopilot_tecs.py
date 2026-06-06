@@ -5,7 +5,6 @@ autopilot block for mavsim_python - Total Energy Control System
         2/14/2020 - RWB
 """
 import numpy as np
-from legacy_mavsim_python.chap11.mavsim_chap11 import Va
 import parameters.control_parameters as AP
 import parameters.aerosonde_parameters as MAV
 from tools.transfer_function import TransferFunction
@@ -68,7 +67,13 @@ class Autopilot:
 	
 	###### TODO ######
         # lateral autopilot
+        phi = state.phi
+        phi_c = wrap(cmd.roll_command, phi)
+        chi_c = wrap(cmd.course_command, state.chi)
 
+        delta_a = self.roll_from_aileron.update(phi_c, state.phi)
+        phi_c = self.course_from_roll.update(chi_c, state.chi)
+        delta_r = self.yaw_damper.update(state.r)
 
         # longitudinal TECS autopilot
         m = MAV.mass
@@ -95,9 +100,9 @@ class Autopilot:
 
         # construct output and commanded states
         delta = MsgDelta(elevator=0,
-                         aileron=0,
+                         aileron=delta_a,
                          rudder=0,
-                         throttle=0)
+                         throttle=delta_t)
         self.commanded_state.altitude = 0                
         self.commanded_state.Va = 0
         self.commanded_state.phi = 0
