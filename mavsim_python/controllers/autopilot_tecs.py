@@ -103,7 +103,7 @@ class Autopilot:
         # construct output and commanded states
         delta = MsgDelta(elevator=AP.delta_e_star,  # placeholder for elevator command
                          aileron=delta_a,
-                         rudder=AP.delta_r_star,
+                         rudder=delta_r,
                          throttle=AP.delta_t_star)
         self.commanded_state.altitude = cmd.altitude_command                
         self.commanded_state.Va = cmd.airspeed_command

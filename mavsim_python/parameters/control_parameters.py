@@ -84,7 +84,7 @@ course_ki = wn_course**2 * Vg / gravity
 wn_dutch_roll = sqrt(Yv*Nr - Nv*Yr)
 yaw_damper_p_wo = wn_dutch_roll/10
 krs = roots([Ndr**2, 2*(Nr*Ndr + Ydr*Nv), (Yv**2 + Nr**2 + 2*Yr*Nv)])
-yaw_damper_kr = krs[0]
+yaw_damper_kr = max(krs)
 
 #----------pitch loop-------------
 wn_pitch = 0
