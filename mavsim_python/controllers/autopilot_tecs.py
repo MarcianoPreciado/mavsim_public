@@ -7,6 +7,7 @@ autopilot block for mavsim_python - Total Energy Control System
 import numpy as np
 import parameters.control_parameters as AP
 import parameters.aerosonde_parameters as MAV
+import parameters.simulation_parameters as SIM
 from tools.transfer_function import TransferFunction
 from tools.wrap import wrap
 from controllers.pi_control import PIControl
@@ -80,13 +81,13 @@ class Autopilot:
         # longitudinal TECS autopilot
         m = MAV.mass
         g = AP.gravity
-        hc = cmd.altitude_command
-        h = state.altitude
-        he_bar = AP.altitude_zone
-        Uerror = m*g*saturate(hc - h, 0, he_bar)
-        
         Vac = cmd.airspeed_command
         Va = state.Va
+        hc = cmd.altitude_command
+        h = state.altitude
+        # Total Energy Control System
+        he_bar = AP.altitude_zone
+        Uerror = m*g*saturate(hc - h, 0, he_bar)
         Kerror = 0.5*m*g*(Vac**2 - Va**2)
         
         E = Uerror + Kerror
@@ -100,8 +101,11 @@ class Autopilot:
         delta_t = self.E_kp*E + self.E_ki*self.E_integrator
         theta_c = self.B_kp*B + self.B_ki*self.B_integrator
 
+        # Pitch hold using the elevator H = theta(s) / theta_c(s)
+        delta_e = self.pitch_from_elevator.update(theta_c, state.theta, state.q)
+
         # construct output and commanded states
-        delta = MsgDelta(elevator=AP.delta_e_star,  # placeholder for elevator command
+        delta = MsgDelta(elevator=delta_e,  # placeholder for elevator command
                          aileron=delta_a,
                          rudder=delta_r,
                          throttle=AP.delta_t_star)

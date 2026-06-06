@@ -87,11 +87,11 @@ krs = roots([Ndr**2, 2*(Nr*Ndr + Ydr*Nv), (Yv**2 + Nr**2 + 2*Yr*Nv)])
 yaw_damper_kr = max(krs)
 
 #----------pitch loop-------------
-wn_pitch = 0
-zeta_pitch = 0 
-pitch_kp = 0
-pitch_kd = 0
-K_theta_DC = 0
+wn_pitch = 25
+zeta_pitch = 1.2
+pitch_kp = (wn_pitch**2 - TF.a_theta2) / TF.a_theta3
+pitch_kd = (2 * zeta_pitch * wn_pitch - TF.a_theta1) / TF.a_theta3
+K_theta_DC = pitch_kp * TF.a_theta3 / wn_pitch**2
 
 #----------altitude loop-------------
 wn_altitude = 0
