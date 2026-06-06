@@ -68,14 +68,15 @@ Wx = 10 # bandwidth scale between loops
 
 #----------roll loop-------------
 # get transfer function data for delta_a to phi
-wn_roll = sqrt(TF.a_phi2)
-zeta_roll = 0.75
+wn_roll = sqrt(TF.a_phi2) * 0.8
+zeta_roll = 1.2
 roll_kp = wn_roll**2 / TF.a_phi2
 roll_kd = (2*zeta_roll*wn_roll - TF.a_phi1) / TF.a_phi2
 
 #----------course loop-------------
-wn_course = wn_roll / Wx
-zeta_course = 5
+# chi_c to phi_c (course to pitch)
+wn_course = wn_roll / 4
+zeta_course = 0.7
 course_kp = (2 * zeta_course * wn_course * Vg) / gravity
 course_ki = wn_course**2 * Vg / gravity
 
