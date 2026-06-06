@@ -67,12 +67,12 @@ class Autopilot:
 	
 	###### TODO ######
         # lateral autopilot
-        phi = state.phi
-        phi_c = wrap(cmd.roll_command, phi)
         chi_c = wrap(cmd.course_command, state.chi)
-
-        delta_a = self.roll_from_aileron.update(phi_c, state.phi)
         phi_c = self.course_from_roll.update(chi_c, state.chi)
+        # phi_c = wrap(phi_c, state.phi)
+        phi_c = saturate(phi_c, -np.radians(30), np.radians(30))
+        delta_a = self.roll_from_aileron.update(phi_c, state.phi, state.p)
+        
         delta_r = self.yaw_damper.update(state.r)
 
         # longitudinal TECS autopilot
@@ -99,15 +99,15 @@ class Autopilot:
         theta_c = self.B_kp*B + self.B_ki*self.B_integrator
 
         # construct output and commanded states
-        delta = MsgDelta(elevator=0,
+        delta = MsgDelta(elevator=AP.delta_e_star,  # placeholder for elevator command
                          aileron=delta_a,
-                         rudder=0,
-                         throttle=delta_t)
-        self.commanded_state.altitude = 0                
-        self.commanded_state.Va = 0
-        self.commanded_state.phi = 0
+                         rudder=AP.delta_r_star,
+                         throttle=AP.delta_t_star)
+        self.commanded_state.altitude = cmd.altitude_command                
+        self.commanded_state.Va = cmd.airspeed_command
+        self.commanded_state.phi = phi_c
         self.commanded_state.theta = 0
-        self.commanded_state.chi = 0
+        self.commanded_state.chi = cmd.course_command
         return delta, self.commanded_state
 
     def saturate(self, input, low_limit, up_limit):

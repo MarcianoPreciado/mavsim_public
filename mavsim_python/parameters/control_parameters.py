@@ -68,8 +68,8 @@ Wx = 10 # bandwidth scale between loops
 
 #----------roll loop-------------
 # get transfer function data for delta_a to phi
-wn_roll = 1
-zeta_roll = 1
+wn_roll = sqrt(TF.a_phi2)
+zeta_roll = 0.75
 roll_kp = wn_roll**2 / TF.a_phi2
 roll_kd = (2*zeta_roll*wn_roll - TF.a_phi1) / TF.a_phi2
 
