@@ -49,13 +49,27 @@ class Autopilot:
                         kd=AP.pitch_kd,
                         limit=np.radians(45))
         # throttle gains (unitless)
-        self.E_kp = 0
-        self.E_ki = 0
-        # pitch gains
-        self.B_kp = 0
-        self.B_ki = 0
+        # Ku = 0.0019
+        # Tu = 1.75
+        # self.E_kp = 0.45 * Ku
+        # self.E_ki = 0.54*Ku/Tu
+        # # pitch gains
+        # # Ku = 0.0004
+        # # Tu = 2.58
+        # Ku = 0.0001
+        # Tu = 3
+        # self.B_kp = 0.45 * Ku
+        # self.B_ki = 0.54*Ku/Tu
+        # self.B_kp = 0.0008
+        # self.B_ki = 0
+
+        scale = 0.0005
+        self.B_kp = self.E_kp = 1 * scale
+        self.B_ki = self.E_ki = 0.4 * scale
+
+
         # saturated altitude error
-        self.h_error_max = 0  # meters
+        self.h_error_max = 10  # meters
         self.E_integrator = 0
         self.B_integrator = 0
         self.E_error_d1 = 0
@@ -86,8 +100,7 @@ class Autopilot:
         hc = cmd.altitude_command
         h = state.altitude
         # Total Energy Control System
-        he_bar = AP.altitude_zone
-        Uerror = m*g*saturate(hc - h, 0, he_bar)
+        Uerror = m*g*saturate(hc - h, -self.h_error_max, self.h_error_max)
         Kerror = 0.5*m*g*(Vac**2 - Va**2)
         
         E = Uerror + Kerror
@@ -99,7 +112,8 @@ class Autopilot:
         self.B_error_d1 = B
 
         delta_t = self.E_kp*E + self.E_ki*self.E_integrator
-        theta_c = self.B_kp*B + self.B_ki*self.B_integrator
+        delta_t = saturate(delta_t, 0, 2)
+        theta_c = (self.B_kp*B + self.B_ki*self.B_integrator)
 
         # Pitch hold using the elevator H = theta(s) / theta_c(s)
         delta_e = self.pitch_from_elevator.update(theta_c, state.theta, state.q)
@@ -108,11 +122,11 @@ class Autopilot:
         delta = MsgDelta(elevator=delta_e,  # placeholder for elevator command
                          aileron=delta_a,
                          rudder=delta_r,
-                         throttle=AP.delta_t_star)
+                         throttle=delta_t)
         self.commanded_state.altitude = cmd.altitude_command                
         self.commanded_state.Va = cmd.airspeed_command
         self.commanded_state.phi = phi_c
-        self.commanded_state.theta = 0
+        self.commanded_state.theta = theta_c
         self.commanded_state.chi = cmd.course_command
         return delta, self.commanded_state
 
