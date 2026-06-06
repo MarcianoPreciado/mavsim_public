@@ -73,10 +73,10 @@ roll_kp = wn_roll**2 / TF.a_phi2
 roll_kd = (2*zeta_roll*wn_roll - TF.a_phi1) / TF.a_phi2
 
 #----------course loop-------------
-wn_course = 0
-zeta_course = 0
-course_kp = 0
-course_ki = 0
+wn_course = wn_roll / Wx
+zeta_course = 5
+course_kp = (2 * zeta_course * wn_course * Vg) / gravity
+course_ki = wn_course**2 * Vg / gravity
 
 #----------yaw damper-------------
 yaw_damper_p_wo = 0
