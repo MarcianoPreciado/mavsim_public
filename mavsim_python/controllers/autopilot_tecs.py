@@ -23,6 +23,8 @@ def saturate(input, low_limit, up_limit):
         output = input
     return output
 
+roll_saturation = np.radians(60)
+
 class Autopilot:
     def __init__(self, ts_control):
         # instantiate lateral controllers
@@ -34,7 +36,7 @@ class Autopilot:
                         kp=AP.course_kp,
                         ki=AP.course_ki,
                         Ts=ts_control,
-                        limit=np.radians(30))
+                        limit=roll_saturation)
         self.yaw_damper = TransferFunction(
                         num=np.array([[AP.yaw_damper_kr, 0]]),
                         den=np.array([[1, AP.yaw_damper_p_wo]]),
@@ -69,8 +71,8 @@ class Autopilot:
         # lateral autopilot
         chi_c = wrap(cmd.course_command, state.chi)
         phi_c = self.course_from_roll.update(chi_c, state.chi)
-        # phi_c = wrap(phi_c, state.phi)
-        phi_c = saturate(phi_c, -np.radians(30), np.radians(30))
+        phi_c = wrap(phi_c, state.phi)
+        phi_c = saturate(phi_c, -roll_saturation, roll_saturation)
         delta_a = self.roll_from_aileron.update(phi_c, state.phi, state.p)
         
         delta_r = self.yaw_damper.update(state.r)
