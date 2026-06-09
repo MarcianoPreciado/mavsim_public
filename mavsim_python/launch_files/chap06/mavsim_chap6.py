@@ -19,9 +19,10 @@ from tools.signals import Signals
 from models.mav_dynamics_control import MavDynamics
 from models.wind_simulation import WindSimulation
 # from controllers.autopilot import Autopilot
-from controllers.autopilot_tecs import Autopilot
+# from controllers.autopilot_tecs import Autopilot
 #from controllers.lqr_with_rate_damping import Autopilot
 # from controllers.autopilot_lqr import Autopilot
+from controllers.autopilot_lqr_tecs import Autopilot
 from viewers.view_manager import ViewManager
 import time
 
@@ -86,7 +87,7 @@ while sim_time < end_time:
 
     # -------increment time-------------
     sim_time += SIM.ts_simulation
-    time.sleep(0.002) # slow down the simulation for visualization
+    time.sleep(0.000002) # slow down the simulation for visualization
 
 viewers.close(dataplot_name="ch6_data_plot")
 
