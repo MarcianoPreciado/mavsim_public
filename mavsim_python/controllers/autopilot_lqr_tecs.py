@@ -37,6 +37,10 @@ class Autopilot:
         self.errorLD1 = 0
         self.errorAltitudeD1 = 0
         self.errorAirspeedD1 = 0
+        # saturation flags (previous step) for integrator pause anti-windup
+        self.delta_a_sat = False
+        self.delta_e_sat = False
+        self.delta_t_sat = False
         # compute LQR gains
         
         CrLat = array([[0, 0, 0, 0, 1]])
@@ -74,8 +78,8 @@ class Autopilot:
             [  0.,       0.    ],
         ])
 
-        Qlon = diag([10.0, 10.0, 100, 50, 50.0, 20, 20, 40., 100.]) # u, w, q, theta, h, Edot_int, Ldot_int, h_int, Va_int
-        Rlon = diag ([1 , 1]) # e , t
+        Qlon = diag([1, 1, 1, 1/3**3, 2, 1/10**2, 1/10**2, 1/25**2., 1/20**2.]) # u, w, q, theta, h, Edot_int, Ldot_int, h_int, Va_int
+        Rlon = diag ([0.5 , 1]) # e , t
         Plon = solve_continuous_are(AAlon, BBlon, Qlon, Rlon)
         self.Klon = inv(Rlon) @ BBlon.T @ Plon
         # C_lon: maps x_lon=[u,w,q,theta,h] -> [Edot, Ldot]; embedded in AAlon rows 5-6
@@ -90,11 +94,9 @@ class Autopilot:
         # lateral autopilot
         eVa = state.Va - Var
         eChi = saturate(state.chi - chir, -np.radians(15), np.radians(15))
-        self.integratorCourse += (eChi + self.errorCourseD1) * self.Ts / 2
+        if not self.delta_a_sat:
+            self.integratorCourse += (eChi + self.errorCourseD1) * self.Ts / 2
         self.errorCourseD1 = eChi
-        if abs(eChi) < np.radians(10):
-            self.integratorCourse = 0
-            self.errorCourseD1 = 0
 
         xLat = array([[ eVa * sin(state.beta )] , # v
                     [ state.p] ,
@@ -104,26 +106,24 @@ class Autopilot:
                     [ self.integratorCourse ]])
 
         tmp = -self.Klat @ xLat
-        delta_a = saturate(tmp.item(0), -radians(30), radians(30))
-        delta_r = saturate(tmp.item(1), -radians(30), radians(30))
+        delta_a_raw = tmp.item(0)
+        delta_r_raw = tmp.item(1)
+        self.delta_a_sat = abs(delta_a_raw) >= radians(30)
+        delta_a = saturate(delta_a_raw, -radians(30), radians(30))
+        delta_r = saturate(delta_r_raw, -radians(30), radians(30))
 
 
         # longitudinal autopilot
         hr = saturate(hr, state.altitude - 0.2*AP.altitude_zone, state.altitude + 0.2*AP.altitude_zone)
         eh = state.altitude - hr
-        self.integratorAltitude += (eh + self.errorAltitudeD1) * self.Ts / 2
+        if not self.delta_e_sat:
+            self.integratorAltitude += (eh + self.errorAltitudeD1) * self.Ts / 2
         self.errorAltitudeD1 = eh
-        if abs(eh) < 0.1*AP.altitude_zone:
-            self.integratorAltitude = 0
-            self.errorAltitudeD1 = 0
-        
-        self.integratorAirspeed += (eVa + self.errorAirspeedD1) * self.Ts / 2
-        self.errorAirspeedD1 = eVa
-        if abs(eVa) < 0.12:
-            self.integratorAirspeed = 0
-            self.errorAirspeedD1 = 0
 
-        
+        if not self.delta_t_sat:
+            self.integratorAirspeed += (eVa + self.errorAirspeedD1) * self.Ts / 2
+        self.errorAirspeedD1 = eVa
+
         x_lon_phys = array([[eVa * cos(state.alpha)],   # eu
                             [eVa * sin(state.alpha)],   # ew
                             [state.q],
@@ -133,10 +133,12 @@ class Autopilot:
         Edot = tecs.item(0)
         Ldot = tecs.item(1)
 
-        self.integratorE += (Edot + self.errorED1) * self.Ts / 2
+        if not self.delta_t_sat:
+            self.integratorE += (Edot + self.errorED1) * self.Ts / 2
         self.errorED1 = Edot
 
-        self.integratorL += (Ldot + self.errorLD1) * self.Ts / 2
+        if not self.delta_e_sat:
+            self.integratorL += (Ldot + self.errorLD1) * self.Ts / 2
         self.errorLD1 = Ldot
 
         xLon = array([[ eVa * cos(state.alpha) ] , # u
@@ -148,10 +150,14 @@ class Autopilot:
                       [ self.integratorL ],
                       [ self.integratorAltitude ] ,
                       [ self.integratorAirspeed ]])
-        
+
         tmp = -self.Klon @ xLon
-        delta_e = saturate(tmp.item(0), -radians(30), radians(30))
-        delta_t = saturate(tmp.item(1), 0, 1)
+        delta_e_raw = tmp.item(0)
+        delta_t_raw = tmp.item(1)
+        self.delta_e_sat = abs(delta_e_raw) >= radians(30)
+        self.delta_t_sat = not (0 < delta_t_raw < 1)
+        delta_e = saturate(delta_e_raw, -radians(30), radians(30))
+        delta_t = saturate(delta_t_raw, 0, 1)
 
         # construct control outputs and commanded states
         delta = MsgDelta(elevator=delta_e,
