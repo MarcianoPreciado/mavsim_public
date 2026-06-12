@@ -125,6 +125,5 @@ class Autopilot:
         # self.commanded_state.phi = cmd.course_command
         # self.commanded_state.theta = 0
         self.commanded_state.chi = cmd.course_command
-        print("delta: ", delta.print())
         return delta, self.commanded_state
 
