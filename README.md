@@ -1,4 +1,20 @@
 # Marciano's Progress
+## Chapter 6 Controller Design
+I made 3 iterations succesively improving aspects of performance  
+Controllers:
+
+
+1. LQR.  
+![LQR Controller](./simulator_gifs/chapter-6-LQR.gif) 
+![LQR Controller](./simulator_gifs/LQR.png)  
+
+2. Total Energy Classical Controller (TECS).  
+![TECS Controller](./simulator_gifs/chapter-6-TECS.gif) 
+![TECS Controller](./simulator_gifs/TECS.png)  
+
+3. LQR + TECs  (the best of the 3)
+![LQR + TECS Controller](./simulator_gifs/chapter-6-LQR-TECS.gif) 
+![LQR + TECS Controller](./simulator_gifs/LQR_TECS.png)  
 ## Chapter 5 Simulator Progress
 ### Trim and Linear Design Models
 Here we used the non-linear physics model to construct a linear model around fixed level flight, ie flying in trim.
@@ -8,7 +24,7 @@ Here we used the non-linear physics model to construct a linear model around fix
 See here how the MAV flying in trim with a sudden impulse on the elevator exibits:
 1. short-period mode dynamics
 2. phugoid mode dynamics  
-![Longitudinal Dynamics](simulator_gifs/chapter-5-sim-longitudinal-dynamics.gif)
+![Longitudinal Dynamics](simulator_gifs/chapter-5-sim-longitudinal-dynamics.gif)  
 ![Longitudinal Dynamics Chart](simulator_gifs/chapter-5-sim-longitudinal-dynamics-charts.gif)
 
 ### Lateral Dynamics
@@ -22,7 +38,7 @@ From the rudder and aileron impulses you can see
 ![Lateral Dynamics Chart (rudder)](./simulator_gifs/chapter-5-sim-lateral-dynamics-rudder-impulse-chart.gif)
 
 #### Aileron Impulse
-![Lateral Dynamics (aileron)](./simulator_gifs/chapter-5-sim-lateral-dynamics-aileron-impulse.gif)
+![Lateral Dynamics (aileron)](./simulator_gifs/chapter-5-sim-lateral-dynamics-aileron-impulse.gif)  
 ![Lateral Dynamics Chart (aileron)](./simulator_gifs/chapter-5-sim-lateral-dynamics-aileron-impulse-chart.gif)
 ## Chapter 4 Simulator Progress
 ### Forces and Moments
