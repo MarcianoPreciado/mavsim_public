@@ -4,15 +4,26 @@ I made 3 iterations succesively improving aspects of performance
 Controllers:
 
 
-1. LQR.  
+### 1. LQR.  
+Designed using optimal controll techniques. The main downside is the odd balance between airspeed and altitude setpoints.   
 ![LQR Controller](./simulator_gifs/chapter-6-LQR.gif) 
 ![LQR Controller](./simulator_gifs/LQR.png)  
 
-2. Total Energy Classical Controller (TECS).  
+### 2. Total Energy Classical Controller (TECS)
+A controller designed to manage the total energy state, 
+1. Kinetic energy 
+2. Potential energy  
+
+Fighter pilots are taught to be aware of the energy transfer between altitude and speed. This controller is too. The difficulty comes with tuning the competing interests of altitude and speed.  
 ![TECS Controller](./simulator_gifs/chapter-6-TECS.gif) 
 ![TECS Controller](./simulator_gifs/TECS.png)  
 
-3. LQR + TECs  (the best of the 3)
+### 3. LQR + TECs  (the best of the 3)  
+The best of both worlds. A combination of: 
+1. optimal LQR control for the lateral dynamics
+2. a pole-placed TECS controller for the longitudinal dynamics
+
+This resulted in the smoothest controller so far and was quite easy to tune.  
 ![LQR + TECS Controller](./simulator_gifs/chapter-6-LQR-TECS.gif) 
 ![LQR + TECS Controller](./simulator_gifs/LQR_TECS.png)  
 ## Chapter 5 Simulator Progress
