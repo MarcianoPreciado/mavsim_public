@@ -8,6 +8,8 @@ import numpy as np
 from numpy import array, sin, cos, radians, concatenate, zeros, diag
 from scipy.linalg import solve_continuous_are, inv
 import parameters.control_parameters as AP
+import parameters.aerosonde_parameters as MAV
+
 from tools.wrap import wrap
 import models.model_coef as M
 from message_types.msg_state import MsgState
@@ -86,6 +88,9 @@ class Autopilot:
         self.C_lon = AAlon[5:7, 0:5]
         self.commanded_state = MsgState()
 
+        self.Klon = np.array([[ -0.08,   2.72,  -1.36, -92.49, -22.75,  -0.26,   0.27],
+ [  2.08,   0.19,  -0.03,  -3.08,  -0.45,   0.01,   0.02]])
+
     def update(self, cmd, state):
         Var = cmd.airspeed_command
         hr = cmd.altitude_command
@@ -98,7 +103,11 @@ class Autopilot:
             self.integratorCourse += (eChi + self.errorCourseD1) * self.Ts / 2
         self.errorCourseD1 = eChi
 
-        xLat = array([[ eVa * sin(state.beta )] , # v
+        eu = eVa * cos(state.alpha)
+        ev = eVa * sin(state.beta)
+        ew = eVa * sin(state.alpha)
+
+        xLat = array([[ ev ] , # v
                     [ state.p] ,
                     [ state.r] ,
                     [ state.phi ] ,
@@ -124,32 +133,23 @@ class Autopilot:
             self.integratorAirspeed += (eVa + self.errorAirspeedD1) * self.Ts / 2
         self.errorAirspeedD1 = eVa
 
-        x_lon_phys = array([[eVa * cos(state.alpha)],   # eu
-                            [eVa * sin(state.alpha)],   # ew
-                            [state.q],
-                            [state.theta],
-                            [eh]])
-        tecs = self.C_lon @ x_lon_phys
-        Edot = tecs.item(0)
-        Ldot = tecs.item(1)
+        E_err = (AP.u_star / MAV.gravity) * eu + \
+                (AP.v_star / MAV.gravity) * ev +  \
+                (AP.w_star / MAV.gravity) * ew +  \
+                eh  # = δVa·Va*/g + δh
+        D_err = (AP.u_star / MAV.gravity) * eu + \
+                (AP.v_star / MAV.gravity) * ev + \
+                (AP.w_star / MAV.gravity) * ew - \
+                eh  # = δVa·Va*/g - δh
 
-        if not self.delta_t_sat:
-            self.integratorE += (Edot + self.errorED1) * self.Ts / 2
-        self.errorED1 = Edot
-
-        if not self.delta_e_sat:
-            self.integratorL += (Ldot + self.errorLD1) * self.Ts / 2
-        self.errorLD1 = Ldot
 
         xLon = array([[ eVa * cos(state.alpha) ] , # u
                       [ eVa * sin(state.alpha) ] , # w
                       [ state.q] ,
                       [ state.theta ] ,
                       [ eh ] ,
-                      [ self.integratorE ] ,
-                      [ self.integratorL ],
-                      [ self.integratorAltitude ] ,
-                      [ self.integratorAirspeed ]])
+                      [ E_err ],
+                      [ D_err ]])
 
         tmp = -self.Klon @ xLon
         delta_e_raw = tmp.item(0)
