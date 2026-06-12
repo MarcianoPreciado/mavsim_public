@@ -52,7 +52,7 @@ class Autopilot:
                     axis=0)
         BBlat = concatenate((M.B_lat, zeros((1,2))), axis=0)
         # Qlat = diag ([.001 , .01 , .1 , 100, 1, 100]) # v, p, r , phi , chi , intChi
-        Qlat = diag([0.01, 0.01, 0.01, 10.0, 100.0, 10.0]) # v, p, r, phi, chi, intChi
+        Qlat = diag([0.01, 0.01, 0.01, 10.0, 150.0, 1.0]) # v, p, r, phi, chi, intChi
         Rlat = diag ([1 , 1]) # a, r
         Plat = solve_continuous_are(AAlat, BBlat, Qlat, Rlat)
         self.Klat = inv(Rlat) @ BBlat.T @ Plat
