@@ -14,7 +14,8 @@ import parameters.aerosonde_parameters as MAV
 import parameters.sensor_parameters as SENSOR
 from models.mav_dynamics_control import MavDynamics as MavDynamicsNoSensors
 from tools.rotations import quaternion_to_rotation, quaternion_to_euler, euler_to_rotation
-
+from numpy.random import normal
+from numpy import sin, cos
 class MavDynamics(MavDynamicsNoSensors):
     def __init__(self, Ts):
         super().__init__(Ts)
@@ -29,11 +30,16 @@ class MavDynamics(MavDynamicsNoSensors):
 
     def sensors(self):
         "Return value of sensors on MAV: gyros, accels, absolute_pressure, dynamic_pressure, GPS"
-       
+        p = self.true_state.p
+        q = self.true_state.q
+        r = self.true_state.r
         # simulate rate gyros(units are rad / sec)
-        self._sensors.gyro_x = 0
-        self._sensors.gyro_y = 0
-        self._sensors.gyro_z = 0
+        eta_gyro_x = normal(SENSOR.gyro_x_bias, SENSOR.gyro_sigma)
+        eta_gyro_y = normal(SENSOR.gyro_y_bias, SENSOR.gyro_sigma)
+        eta_gyro_z = normal(SENSOR.gyro_z_bias, SENSOR.gyro_sigma)    
+        self._sensors.gyro_x = p + eta_gyro_x
+        self._sensors.gyro_y = q + eta_gyro_y
+        self._sensors.gyro_z = r + eta_gyro_z
 
         # simulate accelerometers(units of g)
         self._sensors.accel_x = 0
