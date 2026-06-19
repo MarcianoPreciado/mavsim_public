@@ -17,7 +17,8 @@ import parameters.simulation_parameters as SIM
 from tools.signals import Signals
 from models.mav_dynamics_sensors import MavDynamics
 from models.wind_simulation import WindSimulation
-from controllers.autopilot import Autopilot
+# from controllers.autopilot import Autopilot
+from controllers.autopilot_lqr import Autopilot
 from viewers.view_manager import ViewManager
 import time
 
