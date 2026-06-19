@@ -27,12 +27,21 @@ class MavDynamics(MavDynamicsNoSensors):
         self._gps_eta_h = 0.
         # timer so that gps only updates every ts_gps seconds
         self._t_gps = 999.  # large value ensures gps updates at initial time.
+        self._last_forces_moments = np.zeros((6,1))
 
     def sensors(self):
         "Return value of sensors on MAV: gyros, accels, absolute_pressure, dynamic_pressure, GPS"
-        p = self.true_state.p
-        q = self.true_state.q
-        r = self.true_state.r
+        phi, theta, psi = quaternion_to_euler(self._state[6:10])
+        u = self._state.item(3)
+        v = self._state.item(4)
+        w = self._state.item(5)
+        p = self._state.item(10)
+        q = self._state.item(11)
+        r = self._state.item(12)
+        g = MAV.gravity
+        m = MAV.mass
+        F = self._last_forces_moments[0:3, :]
+
         # simulate rate gyros(units are rad / sec)
         eta_gyro_x = normal(SENSOR.gyro_x_bias, SENSOR.gyro_sigma)
         eta_gyro_y = normal(SENSOR.gyro_y_bias, SENSOR.gyro_sigma)
@@ -42,10 +51,17 @@ class MavDynamics(MavDynamicsNoSensors):
         self._sensors.gyro_z = r + eta_gyro_z
 
         # simulate accelerometers(units of g)
-        self._sensors.accel_x = 0
-        self._sensors.accel_y = 0
-        self._sensors.accel_z = 0
-
+        accel_noise_vec = normal(0.0, SENSOR.accel_sigma, size=(3,1))
+        g_i = np.array([[0, 0, -g]]).T
+        R_b2i = euler_to_rotation(phi, theta, psi)
+        g_b = R_b2i.T @ g_i
+        # Vector calculation
+        accel_vec = F/m + g_b + accel_noise_vec
+        
+        self._sensors.accel_x = accel_vec.item(0)
+        self._sensors.accel_y = accel_vec.item(1)
+        self._sensors.accel_z = accel_vec.item(2)
+        
         # simulate magnetometers
         # magnetic field in provo has magnetic declination of 12.5 degrees
         # and magnetic inclination of 66 degrees
@@ -71,6 +87,22 @@ class MavDynamics(MavDynamicsNoSensors):
         else:
             self._t_gps += self._ts_simulation
         return self._sensors
+
+    def update(self, delta, wind):
+        '''
+            The same update function as in `mav_dynamics_control.py`
+            But with an extension at the end.
+        '''
+        # get forces and moments acting on rigid bod
+        forces_moments = self._forces_moments(delta)
+        super()._rk4_step(forces_moments)
+        # update the airspeed, angle of attack, and side slip angles using new state
+        self._update_velocity_data(wind)
+        # update the message class for the true state
+        self._update_true_state()
+
+        # NEW: Keep track of forces and moments for sensor outputs
+        self._last_forces_moments = forces_moments
 
     def external_set_state(self, new_state):
         self._state = new_state
