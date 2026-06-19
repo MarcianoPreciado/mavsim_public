@@ -40,7 +40,7 @@ class MavDynamics(MavDynamicsNoSensors):
         r = self._state.item(12)
         g = MAV.gravity
         m = MAV.mass
-        F = self._last_forces_moments[0:3, :]
+        F = self._forces
 
         # simulate rate gyros(units are rad / sec)
         eta_gyro_x = normal(SENSOR.gyro_x_bias, SENSOR.gyro_sigma)
@@ -57,7 +57,7 @@ class MavDynamics(MavDynamicsNoSensors):
         g_b = R_b2i.T @ g_i
         # Vector calculation
         accel_vec = F/m + g_b + accel_noise_vec
-        
+
         self._sensors.accel_x = accel_vec.item(0)
         self._sensors.accel_y = accel_vec.item(1)
         self._sensors.accel_z = accel_vec.item(2)
@@ -87,22 +87,6 @@ class MavDynamics(MavDynamicsNoSensors):
         else:
             self._t_gps += self._ts_simulation
         return self._sensors
-
-    def update(self, delta, wind):
-        '''
-            The same update function as in `mav_dynamics_control.py`
-            But with an extension at the end.
-        '''
-        # get forces and moments acting on rigid bod
-        forces_moments = self._forces_moments(delta)
-        super()._rk4_step(forces_moments)
-        # update the airspeed, angle of attack, and side slip angles using new state
-        self._update_velocity_data(wind)
-        # update the message class for the true state
-        self._update_true_state()
-
-        # NEW: Keep track of forces and moments for sensor outputs
-        self._last_forces_moments = forces_moments
 
     def external_set_state(self, new_state):
         self._state = new_state
