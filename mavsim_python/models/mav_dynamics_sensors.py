@@ -70,8 +70,12 @@ class MavDynamics(MavDynamicsNoSensors):
         self._sensors.mag_z = 0
 
         # simulate pressure sensors
-        self._sensors.abs_pressure = 0
-        self._sensors.diff_pressure = 0
+        eta_abs_pres = normal(0.0, SENSOR.abs_pres_sigma)
+        eta_diff_pres = normal(0.0, SENSOR.diff_pres_sigma)
+        rho = MAV.rho
+        h_gl = -1*self._state.item(2)
+        self._sensors.abs_pressure = rho*g*h_gl + eta_abs_pres
+        self._sensors.diff_pressure = rho*self._Va**2 / 2 + eta_diff_pres
         
         # simulate GPS sensor
         if self._t_gps >= SENSOR.ts_gps:
