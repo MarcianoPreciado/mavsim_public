@@ -15,7 +15,12 @@ import parameters.sensor_parameters as SENSOR
 from models.mav_dynamics_control import MavDynamics as MavDynamicsNoSensors
 from tools.rotations import quaternion_to_rotation, quaternion_to_euler, euler_to_rotation
 from numpy.random import normal
-from numpy import sin, cos
+from numpy import sin, cos, atan2, sqrt, exp
+
+def gaussian_markov_next(last, k, sigma, ts):
+    w = normal(0.0, sqrt(ts)*sigma)
+    C = exp(-k * ts) + w
+    return C*last + w
 class MavDynamics(MavDynamicsNoSensors):
     def __init__(self, Ts):
         super().__init__(Ts)
@@ -27,7 +32,6 @@ class MavDynamics(MavDynamicsNoSensors):
         self._gps_eta_h = 0.
         # timer so that gps only updates every ts_gps seconds
         self._t_gps = 999.  # large value ensures gps updates at initial time.
-        self._last_forces_moments = np.zeros((6,1))
 
     def sensors(self):
         "Return value of sensors on MAV: gyros, accels, absolute_pressure, dynamic_pressure, GPS"
@@ -90,15 +94,30 @@ class MavDynamics(MavDynamicsNoSensors):
         self._sensors.diff_pressure = rho*self._Va**2 / 2 + eta_diff_pres
         
         # simulate GPS sensor
+        wn = self._wind.item(0)
+        we = self._wind.item(1)
+        wd = self._wind.item(2)
+        Va = self._Va
+        pn = self._state.item(0)
+        pe = self._state.item(1)
+        pd = self._state.item(2)
+        ph = -pd
         if self._t_gps >= SENSOR.ts_gps:
-            self._gps_eta_n = 0
-            self._gps_eta_e = 0
-            self._gps_eta_h = 0
-            self._sensors.gps_n = 0
-            self._sensors.gps_e = 0
-            self._sensors.gps_h = 0
-            self._sensors.gps_Vg = 0
-            self._sensors.gps_course = 0
+            self._gps_eta_n = gaussian_markov_next(self._gps_eta_n, SENSOR.gps_k, SENSOR.gps_n_sigma, SENSOR.ts_gps)
+            self._gps_eta_e = gaussian_markov_next(self._gps_eta_e, SENSOR.gps_k, SENSOR.gps_e_sigma, SENSOR.ts_gps)
+            self._gps_eta_h = gaussian_markov_next(self._gps_eta_h, SENSOR.gps_k, SENSOR.gps_h_sigma, SENSOR.ts_gps)
+            
+            self._sensors.gps_n = pn + self._gps_eta_n
+            self._sensors.gps_e = pe + self._gps_eta_e
+            self._sensors.gps_h = ph + self._gps_eta_h
+
+            Vgn = Va*cos(psi) + wn
+            Vge = Va*sin(psi) + we
+            gps_eta_V = normal(0.0, SENSOR.gps_Vg_sigma)
+            gps_eta_course = normal(0.0, SENSOR.gps_course_sigma)
+            self._sensors.gps_Vg = sqrt(Vgn**2 + Vge**2) + gps_eta_V
+            self._sensors.gps_course = atan2(Vge, Vgn) + gps_eta_course
+
             self._t_gps = 0.
         else:
             self._t_gps += self._ts_simulation
