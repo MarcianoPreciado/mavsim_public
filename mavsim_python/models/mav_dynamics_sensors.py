@@ -54,7 +54,8 @@ class MavDynamics(MavDynamicsNoSensors):
         accel_noise_vec = normal(0.0, SENSOR.accel_sigma, size=(3,1))
         g_i = np.array([[0, 0, -g]]).T
         R_b2i = euler_to_rotation(phi, theta, psi)
-        g_b = R_b2i.T @ g_i
+        R_i2b = R_b2i.T
+        g_b = R_i2b @ g_i
         # Vector calculation
         accel_vec = F/m + g_b + accel_noise_vec
 
@@ -65,9 +66,20 @@ class MavDynamics(MavDynamicsNoSensors):
         # simulate magnetometers
         # magnetic field in provo has magnetic declination of 12.5 degrees
         # and magnetic inclination of 66 degrees
-        self._sensors.mag_x = 0
-        self._sensors.mag_y = 0
-        self._sensors.mag_z = 0
+        dec = np.radians(12.5)
+        inc = -np.radians(65.7)
+        
+        M = np.array([[1, 0, 0]]).T
+        Mi = euler_to_rotation(0, inc, dec).T @ M
+
+        # Calculate would-be measurement onboard
+        mag_eta = normal(0.0, SENSOR.mag_sigma, size=(3,1))
+        mag_beta = np.ones((3,1)) * SENSOR.mag_beta
+        ymag = R_i2b @ (Mi + mag_beta) + mag_eta
+        
+        self._sensors.mag_x = ymag.item(0)
+        self._sensors.mag_y = ymag.item(1)
+        self._sensors.mag_z = ymag.item(2)
 
         # simulate pressure sensors
         eta_abs_pres = normal(0.0, SENSOR.abs_pres_sigma)
