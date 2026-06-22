@@ -1,4 +1,15 @@
 # Marciano's Progress
+## Chapter 7 Modelling of Noisy Sensors
+Implementation of noisy and biased sensors for  
+1. Gyroscope (angular rates)
+2. Accelerometer (acceleration)
+3. GPS (position and velocity)
+4. Differential pressure sensor (airspeed)
+5. Absolute pressure sensor (altitude)
+6. Magnetometer (heading / pose)
+
+![Sensor Timeseries](./simulator_gifs/chapter-7-noisy-sensor-simulation.gif)  
+
 ## Chapter 6 Controller Design
 I made 3 iterations succesively improving aspects of performance  
 Controllers:
