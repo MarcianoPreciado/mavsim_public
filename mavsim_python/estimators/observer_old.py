@@ -63,8 +63,7 @@ class AlphaFilter:
         self.y = y0  # initial condition
 
     def update(self, u):
-        ##### TODO #####
-        self.y = 0
+        self.y = self.alpha * self.y + (1 - self.alpha) * u
         return self.y
 
 

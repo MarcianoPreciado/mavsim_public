@@ -113,11 +113,15 @@ class Observer:
         self.gps_course_old = 9999
 
     def update(self, measurement: MsgSensors) -> MsgState:
+        # accel_x = self.lpf_accel_x.update(measurement.accel_x)
+        # accel_y = self.lpf_accel_y.update(measurement.accel_y)
+        # accel_z = self.lpf_accel_z.update(measurement.accel_z)
+
         ##### TODO #####
         # estimates for p, q, r are low pass filter of gyro minus bias estimate
-        self.estimated_state.p = 
-        self.estimated_state.q = 
-        self.estimated_state.r = 
+        self.estimated_state.p = self.lpf_gyro_x.update(measurement.gyro_x) 
+        self.estimated_state.q = self.lpf_gyro_y.update(measurement.gyro_y)
+        self.estimated_state.r = self.lpf_gyro_z.update(measurement.gyro_z)
         # invert sensor model to get altitude and airspeed
         abs_pressure = 
         diff_pressure = 
