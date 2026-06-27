@@ -6,12 +6,14 @@ observer
         3/4/2024 - RWB
 """
 import numpy as np
+import parameters.aerosonde_parameters as MAV
 import parameters.control_parameters as CTRL
 import parameters.sensor_parameters as SENSOR
 from tools.wrap import wrap
 from message_types.msg_state import MsgState
 from message_types.msg_sensors import MsgSensors
 from estimators.filters import AlphaFilter, ExtendedKalmanFilterContinuousDiscrete
+from numpy import sqrt, arctan2, arcsin
 
 class Observer:
     def __init__(self, ts: float, initial_measurements: MsgSensors=MsgSensors()):
@@ -20,15 +22,20 @@ class Observer:
         self.estimated_state = MsgState()
 
         ##### TODO #####
-        self.lpf_gyro_x = AlphaFilter(alpha=0., y0=initial_measurements.gyro_x)
-        self.lpf_gyro_y = AlphaFilter(alpha=0., y0=initial_measurements.gyro_y)
-        self.lpf_gyro_z = AlphaFilter(alpha=0., y0=initial_measurements.gyro_z)
-        self.lpf_accel_x = AlphaFilter(alpha=0., y0=initial_measurements.accel_x)
-        self.lpf_accel_y = AlphaFilter(alpha=0., y0=initial_measurements.accel_y)
-        self.lpf_accel_z = AlphaFilter(alpha=0., y0=initial_measurements.accel_z)
+        self.lpf_gyro_x = AlphaFilter(alpha=0.1, y0=initial_measurements.gyro_x)
+        self.lpf_gyro_y = AlphaFilter(alpha=0.1, y0=initial_measurements.gyro_y)
+        self.lpf_gyro_z = AlphaFilter(alpha=0.1, y0=initial_measurements.gyro_z)
+        self.lpf_accel_x = AlphaFilter(alpha=0.1, y0=initial_measurements.accel_x)
+        self.lpf_accel_y = AlphaFilter(alpha=0.1, y0=initial_measurements.accel_y)
+        self.lpf_accel_z = AlphaFilter(alpha=0.1, y0=initial_measurements.accel_z)
         # use alpha filters to low pass filter absolute and differential pressure
-        self.lpf_abs = AlphaFilter(alpha=0., y0=initial_measurements.abs_pressure)
-        self.lpf_diff = AlphaFilter(alpha=0., y0=initial_measurements.diff_pressure)
+        self.lpf_abs = AlphaFilter(alpha=0.25, y0=initial_measurements.abs_pressure)
+        self.lpf_diff = AlphaFilter(alpha=0.25, y0=initial_measurements.diff_pressure)
+        self.lpf_gps_n = AlphaFilter(alpha=0.75, y0=initial_measurements.gps_n)
+        self.lpf_gps_e = AlphaFilter(alpha=0.75, y0=initial_measurements.gps_e)
+        self.lpf_gps_course = AlphaFilter(alpha=0.0, y0=initial_measurements.gps_course)
+        self.lpf_gps_Vg = AlphaFilter(alpha=0.75, y0=initial_measurements.gps_Vg)
+
         # ekf for phi and theta
         self.attitude_ekf = ExtendedKalmanFilterContinuousDiscrete(
             f=self.f_attitude, 
@@ -113,20 +120,41 @@ class Observer:
         self.gps_course_old = 9999
 
     def update(self, measurement: MsgSensors) -> MsgState:
-        # accel_x = self.lpf_accel_x.update(measurement.accel_x)
-        # accel_y = self.lpf_accel_y.update(measurement.accel_y)
-        # accel_z = self.lpf_accel_z.update(measurement.accel_z)
-
+        rho = MAV.rho
+        g = MAV.gravity
         ##### TODO #####
         # estimates for p, q, r are low pass filter of gyro minus bias estimate
         self.estimated_state.p = self.lpf_gyro_x.update(measurement.gyro_x) 
         self.estimated_state.q = self.lpf_gyro_y.update(measurement.gyro_y)
         self.estimated_state.r = self.lpf_gyro_z.update(measurement.gyro_z)
         # invert sensor model to get altitude and airspeed
-        abs_pressure = 
-        diff_pressure = 
-        self.estimated_state.altitude = 
-        self.estimated_state.Va = 
+        abs_pressure = self.lpf_abs.update(measurement.abs_pressure) 
+        diff_pressure = self.lpf_diff.update(measurement.diff_pressure)
+        self.estimated_state.altitude = abs_pressure / (rho * g) 
+        self.estimated_state.Va = sqrt(2 * diff_pressure / rho)
+        # invert sensor model on accelerometers
+        accel_x = self.lpf_accel_x.update(measurement.accel_x)
+        accel_y = self.lpf_accel_y.update(measurement.accel_y)
+        accel_z = self.lpf_accel_z.update(measurement.accel_z)
+        phi = arctan2(accel_y, accel_z)
+        r = accel_x / g
+        r = min(1, max(-1,r))
+        theta = arcsin(r)
+
+        #invert sensor model on GPS
+        gps_n = self.lpf_gps_n.update(measurement.gps_n)
+        gps_e = self.lpf_gps_e.update(measurement.gps_e)
+        gps_Vg = self.lpf_gps_Vg.update(measurement.gps_Vg)
+        gps_course = self.lpf_gps_course.update(measurement.gps_course)
+        # Simplified inverted model smoothing
+        self.estimated_state.phi = phi
+        self.estimated_state.theta = theta
+        self.estimated_state.north = gps_n
+        self.estimated_state.east = gps_e
+        self.estimated_state.Vg = gps_Vg
+        self.estimated_state.chi = gps_course
+        return self.estimated_state
+    
         # estimate phi and theta with ekf
         u_attitude=np.array([
                 [self.estimated_state.p],
@@ -168,10 +196,10 @@ class Observer:
             or (measurement.gps_Vg != self.gps_Vg_old) \
             or (measurement.gps_course != self.gps_course_old):
             y_gps = np.array([
-                    [measurement.gps_n],
-                    [measurement.gps_e],
-                    [measurement.gps_Vg],
-                    [wrap(measurement.gps_course, xhat_position.item(3))],
+                    [gps_n],
+                    [gps_e],
+                    [gps_Vg],
+                    [wrap(gps_course, xhat_position.item(3))],
                     ])
             xhat_position, P_position=self.position_ekf.measurement_update(
                 y=y_gps,
@@ -196,6 +224,7 @@ class Observer:
         self.estimated_state.bx = 0.0
         self.estimated_state.by = 0.0
         self.estimated_state.bz = 0.0
+        
         return self.estimated_state
 
     def f_attitude(self, x: np.ndarray, u: np.ndarray) -> np.ndarray:
@@ -205,7 +234,7 @@ class Observer:
                 u = [p, q, r, Va].T
         '''
         ##### TODO #####
-        xdot =
+        xdot = np.zeros((2,1))
         return xdot
 
     def h_accel(self, x: np.ndarray, u: np.ndarray)->np.ndarray:
@@ -215,7 +244,7 @@ class Observer:
                 u = [p, q, r, Va].T
         '''
         ##### TODO #####
-        y = 
+        y = np.zeros((3,1))
         return y
 
     def f_smooth(self, x, u):
@@ -225,7 +254,7 @@ class Observer:
                 u = [p, q, r, Va, phi, theta].T
         '''
         ##### TODO #####        
-        xdot = 
+        xdot = np.zeros((7,1)) 
         return xdot
 
     def h_pseudo(self, x: np.ndarray, u: np.ndarray)->np.ndarray:
@@ -237,7 +266,7 @@ class Observer:
                 y = [pn, pe, Vg, chi]
         '''
         ##### TODO #####         
-        y = 
+        y = np.zeros((2,1))
         return y
 
     def h_gps(self, x: np.ndarray, u: np.ndarray)->np.ndarray:
@@ -249,7 +278,7 @@ class Observer:
                 y = [pn, pe, Vg, chi]
         '''
         ##### TODO #####         
-        y = 
+        y = np.zeros((4,1))
         return y
 
 
