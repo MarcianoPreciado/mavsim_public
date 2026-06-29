@@ -13,7 +13,7 @@ from tools.wrap import wrap
 from message_types.msg_state import MsgState
 from message_types.msg_sensors import MsgSensors
 from estimators.filters import AlphaFilter, ExtendedKalmanFilterContinuousDiscrete
-from numpy import sqrt, arctan2, arcsin
+from numpy import sqrt, arctan2, arcsin, sin, cos, tan
 
 class Observer:
     def __init__(self, ts: float, initial_measurements: MsgSensors=MsgSensors()):
@@ -153,8 +153,7 @@ class Observer:
         self.estimated_state.east = gps_e
         self.estimated_state.Vg = gps_Vg
         self.estimated_state.chi = gps_course
-        return self.estimated_state
-    
+        
         # estimate phi and theta with ekf
         u_attitude=np.array([
                 [self.estimated_state.p],
@@ -175,49 +174,49 @@ class Observer:
             R=self.R_accel)
         self.estimated_state.phi = xhat_attitude.item(0)
         self.estimated_state.theta = xhat_attitude.item(1)
-        # estimate pn, pe, Vg, chi, wn, we, psi with ekf
-        u_smooth = np.array([
-                [self.estimated_state.q],
-                [self.estimated_state.r],
-                [self.estimated_state.Va],
-                [self.estimated_state.phi],
-                [self.estimated_state.theta],
-                ])
-        xhat_position, P_position=self.position_ekf.propagate_model(u_smooth)
-        y_pseudo = np.array([[0.], [0.]])
-        xhat_position, P_position=self.position_ekf.measurement_update(
-            y=y_pseudo,
-            u=u_smooth,
-            h=self.h_pseudo,
-            R=self.R_pseudo)
-        # only update GPS when one of the signals changes
-        if (measurement.gps_n != self.gps_n_old) \
-            or (measurement.gps_e != self.gps_e_old) \
-            or (measurement.gps_Vg != self.gps_Vg_old) \
-            or (measurement.gps_course != self.gps_course_old):
-            y_gps = np.array([
-                    [gps_n],
-                    [gps_e],
-                    [gps_Vg],
-                    [wrap(gps_course, xhat_position.item(3))],
-                    ])
-            xhat_position, P_position=self.position_ekf.measurement_update(
-                y=y_gps,
-                u=u_smooth,
-                h=self.h_gps,
-                R=self.R_gps)
-            # update stored GPS signals
-            self.gps_n_old = measurement.gps_n
-            self.gps_e_old = measurement.gps_e
-            self.gps_Vg_old = measurement.gps_Vg
-            self.gps_course_old = measurement.gps_course
-        self.estimated_state.north = xhat_position.item(0)
-        self.estimated_state.east = xhat_position.item(1)
-        self.estimated_state.Vg = xhat_position.item(2)
-        self.estimated_state.chi = xhat_position.item(3)
-        self.estimated_state.wn = xhat_position.item(4)
-        self.estimated_state.we = xhat_position.item(5)
-        self.estimated_state.psi = xhat_position.item(6)
+        # # estimate pn, pe, Vg, chi, wn, we, psi with ekf
+        # u_smooth = np.array([
+        #         [self.estimated_state.q],
+        #         [self.estimated_state.r],
+        #         [self.estimated_state.Va],
+        #         [self.estimated_state.phi],
+        #         [self.estimated_state.theta],
+        #         ])
+        # xhat_position, P_position=self.position_ekf.propagate_model(u_smooth)
+        # y_pseudo = np.array([[0.], [0.]])
+        # xhat_position, P_position=self.position_ekf.measurement_update(
+        #     y=y_pseudo,
+        #     u=u_smooth,
+        #     h=self.h_pseudo,
+        #     R=self.R_pseudo)
+        # # only update GPS when one of the signals changes
+        # if (measurement.gps_n != self.gps_n_old) \
+        #     or (measurement.gps_e != self.gps_e_old) \
+        #     or (measurement.gps_Vg != self.gps_Vg_old) \
+        #     or (measurement.gps_course != self.gps_course_old):
+        #     y_gps = np.array([
+        #             [gps_n],
+        #             [gps_e],
+        #             [gps_Vg],
+        #             [wrap(gps_course, xhat_position.item(3))],
+        #             ])
+        #     xhat_position, P_position=self.position_ekf.measurement_update(
+        #         y=y_gps,
+        #         u=u_smooth,
+        #         h=self.h_gps,
+        #         R=self.R_gps)
+        #     # update stored GPS signals
+        #     self.gps_n_old = measurement.gps_n
+        #     self.gps_e_old = measurement.gps_e
+        #     self.gps_Vg_old = measurement.gps_Vg
+        #     self.gps_course_old = measurement.gps_course
+        # self.estimated_state.north = xhat_position.item(0)
+        # self.estimated_state.east = xhat_position.item(1)
+        # self.estimated_state.Vg = xhat_position.item(2)
+        # self.estimated_state.chi = xhat_position.item(3)
+        # self.estimated_state.wn = xhat_position.item(4)
+        # self.estimated_state.we = xhat_position.item(5)
+        # self.estimated_state.psi = xhat_position.item(6)
         # not estimating these
         self.estimated_state.alpha = self.estimated_state.theta
         self.estimated_state.beta = 0.0
@@ -233,8 +232,16 @@ class Observer:
                 x = [phi, theta].T
                 u = [p, q, r, Va].T
         '''
-        ##### TODO #####
-        xdot = np.zeros((2,1))
+        phi = x.item(0)
+        theta = x.item(1)
+        p = u.item(0)
+        q = u.item(1)
+        r = u.item(2)
+        Va = u.item(3)
+
+        xdot = np.array([[p + q * sin(phi)*tan(theta) + r * cos(phi)*tan(theta)],
+                         [q * cos(phi) - r * sin(phi)]])
+
         return xdot
 
     def h_accel(self, x: np.ndarray, u: np.ndarray)->np.ndarray:
@@ -243,8 +250,17 @@ class Observer:
                 x = [phi, theta].T
                 u = [p, q, r, Va].T
         '''
-        ##### TODO #####
-        y = np.zeros((3,1))
+        phi = x.item(0)
+        theta = x.item(1)
+        p = u.item(0)
+        q = u.item(1)
+        r = u.item(2)
+        Va = u.item(3)
+        g = MAV.gravity
+        
+        y = np.array([[q*Va*sin(theta) + g*sin(theta)],
+                      [r*Va*cos(theta) - p*Va*sin(theta) - g*cos(theta)*sin(theta)],
+                      [-q*Va*cos(theta) - g*cos(theta)*cos(phi)]])
         return y
 
     def f_smooth(self, x, u):
