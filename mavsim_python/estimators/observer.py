@@ -105,8 +105,8 @@ class Observer:
                 SENSOR.accel_sigma**2
                 ])
         self.R_pseudo = np.diag([
-                0.0,  # pseudo measurement #1 ##### TODO #####
-                0.0,  # pseudo measurement #2 ##### TODO #####
+                0.01**2,  # pseudo measurement #1 ##### TODO #####
+                0.01**2,  # pseudo measurement #2 ##### TODO #####
                 ])
         self.R_gps = np.diag([
                     SENSOR.gps_n_sigma**2,  # y_gps_n
