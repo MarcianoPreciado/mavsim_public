@@ -327,8 +327,20 @@ class Observer:
             returns
                 y = [pn, pe, Vg, chi]
         '''
-        ##### TODO #####         
-        y = np.zeros((4,1))
+        pn = x.item(0)
+        pe = x.item(1)
+        Vg = x.item(2)
+        chi = x.item(3)
+        wn = x.item(4)
+        we = x.item(5)
+        psi = x.item(6)
+        q = u.item(0)
+        r = u.item(1)
+        Va = u.item(2)
+        phi = u.item(3)
+        theta = u.item(4)
+
+        y = np.array([[pn, pe, Vg, chi]]).T
         return y
 
 
