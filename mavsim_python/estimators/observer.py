@@ -282,6 +282,10 @@ class Observer:
         phi = u.item(3)
         theta = u.item(4)
 
+        # Prevent divison by zero
+        if Vg == 0.0:
+            Vg = 0.001
+
         g = MAV.gravity
         psi_dot = q*sin(phi)/cos(theta) + r*cos(phi)/cos(theta)
 
