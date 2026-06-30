@@ -267,7 +267,7 @@ class Observer:
         '''
             system dynamics for propagation model: xdot = f(x, u)
                 x = [pn, pe, Vg, chi, wn, we, psi].T
-                u = [p, q, r, Va, phi, theta].T
+                u = [q, r, Va, phi, theta].T
         '''
         pn = x.item(0)
         pe = x.item(1)
@@ -324,7 +324,7 @@ class Observer:
         '''
             measurement model for gps measurements: y=y(x, u)
                 x = [pn, pe, Vg, chi, wn, we, psi].T
-                u = [p, q, r, Va, phi, theta].T
+                u = [q, r, Va, phi, theta].T
             returns
                 y = [pn, pe, Vg, chi]
         '''
