@@ -269,8 +269,29 @@ class Observer:
                 x = [pn, pe, Vg, chi, wn, we, psi].T
                 u = [p, q, r, Va, phi, theta].T
         '''
-        ##### TODO #####        
-        xdot = np.zeros((7,1)) 
+        pn = x.item(0)
+        pe = x.item(1)
+        Vg = x.item(2)
+        chi = x.item(3)
+        wn = x.item(4)
+        we = x.item(5)
+        psi = x.item(6)
+        p = u.item(0)
+        q = u.item(1)
+        r = u.item(2)
+        Va = u.item(3)
+        phi = u.item(4)
+        theta = u.item(5)
+        g = MAV.gravity
+        psi_dot = q*sin(phi)/cos(theta) + r*cos(phi)/cos(theta)
+
+        xdot = np.array([[Vg*cos(chi)],
+                         [Vg*sin(chi)],
+                         [(Va*cos(psi) + wn) * (-Va*psi_dot*sin(psi)) * (Va*sin(psi) + we) * (Va*psi_dot*cos(psi)) / Vg],
+                         [g/Vg * tan(phi) * cos(chi - psi)],
+                         [0.],
+                         [0.],
+                         [psi_dot]]) 
         return xdot
 
     def h_pseudo(self, x: np.ndarray, u: np.ndarray)->np.ndarray:
