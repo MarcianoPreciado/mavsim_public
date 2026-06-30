@@ -302,8 +302,22 @@ class Observer:
             returns
                 y = [wn, we]
         '''
-        ##### TODO #####         
-        y = np.zeros((2,1))
+        pn = x.item(0)
+        pe = x.item(1)
+        Vg = x.item(2)
+        chi = x.item(3)
+        wn = x.item(4)
+        we = x.item(5)
+        psi = x.item(6)
+        p = u.item(0)
+        q = u.item(1)
+        r = u.item(2)
+        Va = u.item(3)
+        phi = u.item(4)
+        theta = u.item(5)
+        
+        y = np.array([[Va*cos(psi) + wn - Vg*cos(chi)],
+                      [Va*sin(psi) + we - Vg*sin(chi)]])
         return y
 
     def h_gps(self, x: np.ndarray, u: np.ndarray)->np.ndarray:
