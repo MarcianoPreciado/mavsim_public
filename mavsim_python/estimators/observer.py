@@ -300,7 +300,7 @@ class Observer:
                 x = [pn, pe, Vg, chi, wn, we, psi].T
                 u = [q, r, Va, phi, theta].T
             returns
-                y = [pn, pe, Vg, chi]
+                y = [wn, we]
         '''
         ##### TODO #####         
         y = np.zeros((2,1))
