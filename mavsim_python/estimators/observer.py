@@ -276,12 +276,12 @@ class Observer:
         wn = x.item(4)
         we = x.item(5)
         psi = x.item(6)
-        p = u.item(0)
-        q = u.item(1)
-        r = u.item(2)
-        Va = u.item(3)
-        phi = u.item(4)
-        theta = u.item(5)
+        q = u.item(0)
+        r = u.item(1)
+        Va = u.item(2)
+        phi = u.item(3)
+        theta = u.item(4)
+
         g = MAV.gravity
         psi_dot = q*sin(phi)/cos(theta) + r*cos(phi)/cos(theta)
 
@@ -309,12 +309,11 @@ class Observer:
         wn = x.item(4)
         we = x.item(5)
         psi = x.item(6)
-        p = u.item(0)
-        q = u.item(1)
-        r = u.item(2)
-        Va = u.item(3)
-        phi = u.item(4)
-        theta = u.item(5)
+        q = u.item(0)
+        r = u.item(1)
+        Va = u.item(2)
+        phi = u.item(3)
+        theta = u.item(4)
         
         y = np.array([[Va*cos(psi) + wn - Vg*cos(chi)],
                       [Va*sin(psi) + we - Vg*sin(chi)]])
